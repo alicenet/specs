@@ -43,6 +43,8 @@ Native pools are pools that bridge tokens from the tokens native chain into alic
 
 External pools are pools that bridge tokens bridged into alice and then into another external chain, ie token from polygon bridged to alice and then from alice to ethereum. Since the token contract of the token being bridged into a external pool doesnt exist on the current environment, external pools have to act as wrapper tokens for the external token being bridged. When a user withdraws a external token into ethereum, the user will have to burn the UTXO on alicenet, call the bridge router contract with the proof to withdraw, and on succesful validating the proofs supplied a wrapper token will be minted on the external bridge pool.
 
+    [![Native and External Pool Illustration]](/images/natveExternalPool.png)
+
 #### Data
 
 <!-- Data Models / Schemas Requirements -->
