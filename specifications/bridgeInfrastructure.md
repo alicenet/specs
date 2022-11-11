@@ -29,7 +29,7 @@ Provide users an avenue to transfer tokens on to our layer 2 chain where gas fee
 
 #### Assumptions
 
-<!-- Conditions and resources that need to be present and accessible for the solution to work as described -->
+We only charge btoken deposit fees on ethereum for native tokens going into alicnet. All fees for tokens exiting out of alicenet will be collected on the alicenet chain.
 
 ## Specification
 
@@ -45,6 +45,13 @@ Provide users an avenue to transfer tokens on to our layer 2 chain where gas fee
 
 ![Native and External Pool Illustration](/images/natveExternalPool.png)
 
+### Bridge Router
+The Bridge Router is a non-upgradeable contract that tracks deposits, withdraws, and emits deposit events of ERC Tokens going into and out of alicent through the native and external bridge pools. 
+#### Depositing ERC Tokens
+For depositing ERC tokens only Native ERC token deposits must come from BToken since the deposit fees for External Token is charged on exit from alicenet. Each deposit must emit an event with details that uniquely describe the ERC transfer, and a unique nonce must also be emitted in the deposit event for utxo formation.
+
+#### Withdrawing ERC Tokens
+All withdraw requests to the bridge pools will originate from this contract, and the hash of the proofs used for the withdraw will be recorded in this contract to prevent multiple withdraws with the same burn proof.  
 #### Data
 
 <!-- Data Models / Schemas Requirements -->
