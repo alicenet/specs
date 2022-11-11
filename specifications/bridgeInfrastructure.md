@@ -38,7 +38,9 @@ Provide users an avenue to transfer tokens on to our layer 2 chain where gas fee
 ## Bridge Pools
 
     Bridge pools are contracts that hold or hosts tokens being bridged. There are two groups of bridge pools, Native and External and each group has pool logic for each token type.
+    
     Native pools are pools that bridge tokens from the tokens native chain into alice and they only receive tokens on deposit and send tokens on withdraw.
+    
     External pools are pools that bridge tokens bridged into alice and then into another external chain, ie token from polygon bridged to alice and then from alice to ethereum. Since the token contract of the token being bridged into a external pool doesnt exist on the current environment, external pools have to act as wrapper tokens for the external token being bridged. When a user withdraws a external token into ethereum, the user will have to burn the UTXO on alicenet, call the bridge router contract with the proof to withdraw, and on succesful validating the proofs supplied a wrapper token will be minted on the external bridge pool.
 
 #### Data
