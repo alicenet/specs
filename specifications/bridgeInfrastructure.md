@@ -17,11 +17,11 @@ A set of smart contracts that allow users to pay BToken for transfering ERC20, E
 
 #### Context
 
-The purpose of layer 2 solutions is to increase high transaction through put
+The purpose of layer 2 solutions is to increase transaction throughput. Since most transactions on ethereum are ERC token transfers, it makes sense that users would want a bridge or some form of entry to get their erc tokens into our layer 2 solution where transactions are cheaper.
 
 #### Goals
 
-Provide users an avenue to transfer tokens on to our layer 2 chain where gas fees are lower and token mobility is higher
+Provide users a secure avenue to transfer tokens on our layer 2 chain. 
 
 #### Non Goals
 
