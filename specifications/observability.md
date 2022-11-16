@@ -83,7 +83,7 @@ WIP
 #### Security / Risks
 
 - It is possible to accidentally leak secrets via logs
-  - Partially mitigated by us
+  - Partially mitigated by access to logging being restricted
 
 ## Further Considerations
 
