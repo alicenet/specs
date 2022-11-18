@@ -46,7 +46,7 @@ Deploy an ALCB bridge wrapper/external pool on every blockchain supported by Ali
 pros:
 
 - we get deposit fees
-- people trying to attack us with worthless coins will make eth validators and our validators a lot of money.
+- disincentivizes users from flooding alicenet with useless coins.
 
 cons:
 
