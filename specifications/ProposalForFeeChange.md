@@ -13,7 +13,7 @@ created: 2022-11-17
 
 #### Summary
 
-This spec is a proposal to modify change types of fees we collect for our bridging services
+This spec describes the current plans of fee collection for AliceNet bridging, and implications associated with fee collections, as well as possible solutions
 
 #### Context
 
