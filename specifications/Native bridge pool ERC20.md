@@ -13,16 +13,15 @@ created: 2022-11-15
 
 #### Summary
 
-This allows ERC20 tokens to be transferred from Ethereum mainnet into Alicenet and back.
+This specification allows ERC20 tokens to be transferred from Ethereum mainnet into Alicenet and back.
 
 #### Context
 
-Bridge Pools allow transfers of assets from one chain to another.
-Alicenet Native Bridge Pools allow transfers between Ethereum and Alicenet both ways.
+Bridge Pools allow transfers of assets between chains, Alicenet Native Bridge Pools allow transfers between Ethereum mainnet and Alicenet both ways.
 The main reasons for bridging assets into Alicenet is that transfers in Alicenet are:
-* cheaper than Ethereum
-* faster than Ethereum
-* as safe as in Ethereum
+* Cheaper than Ethereum
+* Faster than Ethereum
+* As safe as in Ethereum
 
 #### Goals
 
@@ -41,11 +40,13 @@ Smart contract functions will be called by user through Alicenet Wallet
 #### Overview
 
 To enable bridging for a specific ERC20 token, a particular Native Bridge Pool Implementation smart contract should be deployed for the specific ERC20 contract.
+
 These implementations will support multiple version and expose the following operations:
 * Initialize 
 * Deposit
 * Withdraw
-These implementations will be deployed by Bridge Pool Factory contract by selecting a specific version and will be initialized for ERC contract address.
+
+These implementations will be deployed by BridgePoolFactory.sol contract through the selection of a specific Bridge Pool Implementation version and will be initialized for the specified ERC contract address.
 A central Bridge Router contract will route calls for depositing/withdrawing to the correct implementation. 
 
 #### Data
@@ -54,7 +55,7 @@ N/A
 
 #### Logic
 
-The implementation of Bridge Pool contract should inherit from BridgePoolBase contract and hence implement the following interface:
+The implementations of Native Bridge Pool contract should inherit from NativeBridgePoolBase.sol contract, hence implementing the following interface:
 ```solidity
 interface IBridgePool {
     function initialize(address ercContract_) external;
@@ -74,18 +75,18 @@ Through this operation Native Bridge Pool contract receives ERC20 contract's add
 ##### Deposit function
 
 Deposit function should be called only from Bridge Router with the following parameters:
-1. Sender address -> EOA
-2. Amount -> uint256
+1. Sender address -> EOA of the user who will be sending tokens (not msg.sender)
+2. Amount -> Number of tokens to deposit (uint256)
 
 Upon this call the contract should perform the following operations:
-1. Call deposit function in BridgePoolBase through super.deposit() this function is right now just a placeholder for future deposit pre-actions.
+1. Call deposit function in BridgePoolBase.sol through super.deposit() (this function is right now just a placeholder for future deposit pre-actions).
 2. Transfer tokens from the caller to smart contract and hold them indefinitely.
 3. Trigger in Alicenet the minting of deposited tokens (UTXO creation).
 
 ##### Withdraw function
 
-Withdraw function should be called only from Bridge Router with the following parameters:
-1. Receiver address -> EOA
+Withdraw function should be called only from BridgeRouter.sol with the following parameters:
+1. Receiver address -> EOA of the user who will be receiving tokens (not msg.sender)
 2. Burned UTXO -> an Alicenet preImage of burned UTXO
 3. Proof of inclusion in StateRoot: Proof of inclusion of UTXO in the stateTrie
 4. Proof of inclusion in TXRoot: Proof of inclusion of the transaction included in the txRoot trie.
@@ -94,13 +95,13 @@ Withdraw function should be called only from Bridge Router with the following pa
 
 Upon this call the contract should perform the following operations:
 1. Trigger in Alicenet the burning of withdrawn tokens.
-2. Call withdraw function in BridgePoolBase through super.withdraw(), this will execute withdraw pre-actions that involves validation that tokens have been effectively burned by checking the burned UTXO and the merkle proofs that verify that it was burned on the past blocks on Alicenet chain.
-3. Transfer withdrawn tokens from the contract to the caller.
-4. Register UTXO as already consumed
+2. Call withdraw function in BridgePoolBase through super.withdraw() (this will execute withdraw pre-actions that involves validation that tokens have been effectively burned by checking the burned UTXO and the Merkle Proofs that verify that it was burned on the past blocks on Alicenet chain). This function will return the actual amount of tokens to transfer.
+3. Register UTXO as already consumed
+4. Transfer token amount from the contract to the specified receiver.
 
 ###### UTXO structure
 
-This is an Alicenet Virtual Store structure:
+This is an Alicenet Value Store UTXO structure:
 ```solidity
     struct VSPreImage {
         uint32 txOutIdx;
@@ -113,13 +114,13 @@ This is an Alicenet Virtual Store structure:
     }
 ```
 A specific Alicenet structure with additional fields like ERC20 contract address and multiple values should be created for bridging.
-For VSPreImage parsing VSPreImageParserLibrary can be used.
+For VSPreImage parsing a VSPreImageParserLibrary.sol should be defined.
 
 ###### Proofs validation
 
-For proof validation these libraries can be used:
-1. MerkleProofParserLibrary -> Parse proof bytes into a proof structure.
-2. MerkleProofLibrary -> Verify inclusion of proof on block claims.
+These libraries can be used for proof validation:
+1. MerkleProofParserLibrary.sol -> Parse proof bytes into a proof structure.
+2. MerkleProofLibrary.sol -> Verify inclusion of proof on block claims.
 
 Validation of the Merkle Proof against involves the following steps:
 1. Obtain last block claims from Snapshots contract.
@@ -133,10 +134,10 @@ Validation of the Merkle Proof against involves the following steps:
 The smart contract should handle the following errors:
 1. OnlyBridgePool -> The caller is not Bridge Pool.
 2. ChainIdDoesNotMatch -> Chain ID in UTXO is different than chain ID in block claims.
-3. UTXODoesnotMatch -> key in proof of inclusion for state root is different than key in proof of inclusion for TxHash.
-4. UTXOAlreadyWithdrawn -> UTXO has already been used.
-5. UTXOAccountDoesNotMatchReceiver -> The owner of burned UTXO is not the caller.
-6. MerkleProofKeyDoesNotMatchUTXOID -> The UTXOID is not on proofs.
+3. UTXODoesnotMatch -> Key in proof of inclusion for state root is different than Key in proof of inclusion for TxHash.
+4. UTXOAlreadyWithdrawn -> UTXO has already been consumed.
+5. UTXOAccountDoesNotMatchReceiver -> The owner of burned UTXO is not the receiver in call.
+6. MerkleProofKeyDoesNotMatchUTXOID -> The specified UTXOID is not included on proofs.
 
 #### Testing
 
@@ -146,7 +147,7 @@ Native Bridge Pool ERC20 contracts should pass the following tests:
 * Should make a withdraw for amount specified on informed burned UTXO upon proof verification
 * Should fail to make a withdraw if not called from Bridge Router
 * Should not make a withdraw on an already withdrawn UTXO upon proofs verification
-* Should not make a withdraw for amount specified on informed burned UTXO with wrong merkle proof
+* Should not make a withdraw for amount specified on informed burned UTXO with wrong Merkle proof
 * Should not make a withdraw if sender does not match UTXO owner
 * Should not make a withdraw if chainId in UTXO does not match chainId in snapshot's claims
 * Should not make a withdraw if UTXOID in UTXO does not match UTXOID in proof
@@ -158,7 +159,9 @@ N/A
 
 #### Security / Risks
 
-N/A
+The following risks should be taken in account on withdraw function:
+* Call with fake Merkle Proofs that satisfies proof verification.
+* Force of getLatestSnapshot() on Snapshots.sol to provide fake Block Claims that satisfies proof verification.
 
 ## Further Considerations
 
