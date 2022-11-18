@@ -15,7 +15,7 @@ AliceNet Bridge allows users to transfer tokens on EVM compatible chains into Al
 
 #### Summary
 
-This spec describes the current plans of fee collection for AliceNet bridging and implications associated with fee collections, as well as possible solutions
+This specification describes the current plans of fee collection for AliceNet bridging and implications associated with fee collections, as well as possible solutions
 
 #### Context
 
@@ -23,13 +23,17 @@ ALCB is the utility token for AliceNet, all transactions on our layer 2 chain ar
 
 #### Goals
 
-create a competitive fee system for our bridge that is gas efficient, and consistent in all bridges moving tokens into AliceNet
+Create a competitive fee system for our bridge that is gas efficient, and consistent in all bridges moving tokens into AliceNet
 
 #### Non-Goals
 
 #### Assumptions
 
-All Fees are charged in ALCB
+- All Fees are charged in ALCB
+- We want people to transfer high trade volume tokens into AliceNet
+- Our First road block in attracting current crypto users into our echo system is the onboarding overhead. The price of transfering their existing coins could be a point of friction for users considering moving their tokens into AliceNet
+- The amount of high trade volume tokens in our system is directly proportional to the profitability of our system
+- Most users will determine what bridge they will used based on the cost incurred from the transfer
 
 ## Specification
 
@@ -43,30 +47,30 @@ For the case where users are transferring a token that is native from Ethereum i
 
 Deploy an ALCB bridge wrapper/external pool on every blockchain supported by AliceNet, except for Ethereum. With this approach, users can buy ALCB on Ethereum, transfer it to AliceNet, then bridge it out of AliceNet, into the external chain, and then burn it as a deposit fee to bridge a native token from an external chain into AliceNet.
 
-pros:
+Pros:
 
-- we get deposit fees
-- disincentivizes users from flooding AliceNet with useless coins.
-- possibly increase fees on other layer 2 chains since gas is cheaper there (for another discussion)
+- We get deposit fees
+- Disincentivizes users from flooding AliceNet with useless coins.
+- Possibly increase fees on other layer 2 chains since gas is cheaper there (for another discussion)
 
-cons:
+Cons:
 
-- bridge routers on Ethereum will have different logic than routers in other chains
-- users will either have to initiate native token deposits in external chains from an external ERC20 ALCB bridge pool or interact with a router that calls the external bridge pool.
-- vulnerable to Btoken price hike, especially if amm pools come into play, it is in our competitors' best interest that BToken price is high on their chain
+- Bridge routers on Ethereum will have different logic than routers in other chains
+- Users will either have to initiate native token deposits in external chains from an external ERC20 ALCB bridge pool or interact with a router that calls the external bridge pool.
+- Vulnerable to Btoken price hike, especially if amm pools come into play, it is in our competitors' best interest that BToken price is high on their chain
 
 **Solution 2**
 
-charge no deposit fee for native erc tokens going into AliceNet, charge withdraw and deposit fee on alicenet when exiting AliceNet back to the tokens native chain
+Charge no deposit fee for native erc tokens going into AliceNet, charge withdraw and deposit fee on alicenet when exiting AliceNet back to the tokens native chain
 
-pros:
+Pros:
 
 - less friction for onboarding new users
 - cheaper than our competitors to enter our chain
 - fees are all collected on AliceNet reducing the number of cross-contract calls
 - incentivizes users to stay in our bridge since the overhead for exiting is higher than staying
 
-cons:
+Cons:
 
 - our validators miss out on fees for every ERC token deposit
 - ALCB price could be different from the time of entrance and time of exit
@@ -76,14 +80,14 @@ cons:
 
 charge no fees on entrance, the user pays for the gas to transfer their token into the bridge pool, and they are charged only a withdrawal fee on AliceNet for exiting Alicenet back to the tokens native chain.
 
-pros:
+Pros:
 
 - way more competitive than anyone
 - can capture more tokens on our chain, even from polygon
 - more users will use our bridge
 - we gain more profit from more transactions on AliceNet
 
-cons:
+Cons:
 
 - we miss out on the deposit fee
 
