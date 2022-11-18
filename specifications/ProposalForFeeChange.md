@@ -3,8 +3,8 @@ title: Proposal for bridge service fees
 author: z-j-lin, vtleonardo
 discussion: <!--- Discussion URL -->
 team: Backend
-category: <!--- Development, Informational, User Experience -->
-status: <!--- Draft, Review, or Final -->
+category: Development
+status: Draft
 related: <!-- Issue or Spec [URL] -->
 created: 2022-11-17
 ---
