@@ -11,13 +11,15 @@ created: 2022-11-17
 
 ## Introduction
 
+AliceNet Bridge allows users to transfer tokens on evm compatible chains into alicenet where fees are less expensive.
+
 #### Summary
 
 This spec describes the current plans of fee collection for AliceNet bridging and implications associated with fee collections, as well as possible solutions
 
 #### Context
 
-<!-- Why is this being introduced. Give background and rationale -->
+ALCB is the utility token for AliceNet, all transactions on our layer 2 chain are charged in ALCB, and ALCB is native to Ethereum. There are currently two categories of fees and each category has sub categories based on what pool logic the user is interacting with. For exiting tokens back into the tokens native chain, we charge a withdraw fee on AliceNet, and for transfering external tokens into external pools, we charge a withdraw fee and a deposit fee
 
 #### Goals
 
@@ -103,7 +105,7 @@ Not collecting ALCB fees for native token deposits means we can remove the depos
 
 #### Prioritization
 
-<!--- How this fits into the roadmap -->
+This blocks development of the bridge since this feature touches on nonupgradeable parts of our infrastructure such as the ALCB constract, and Bridge Router.
 
 #### Dependencies
 
