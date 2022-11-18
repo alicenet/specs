@@ -1,11 +1,11 @@
 ---
 title: Proposal for bridge service fees
 author: z-j-lin, vtleonardo
-discussion: <!--- Discussion URL -->
+discussion: https://github.com/alicenet/specs/discussions/20
 team: Backend
 category: Development
 status: Draft
-related: <!-- Issue or Spec [URL] -->
+related: [Bridge Router](https://github.com/alicenet/alicenet/issues/478)
 created: 2022-11-17
 ---
 
