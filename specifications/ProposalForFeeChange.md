@@ -35,13 +35,13 @@ create a competitive fee system for our bridge that is gas efficient, and consis
 
 #### Overview
 
-On the current design, there are fees charged **on alicenet** when users transfer tokens back to other blockchains. The fee will depend on if the destination blockchain is the native blockchain where the token was originated or not.
+On the current design, there are fees charged on AliceNet when users transfer tokens back to other blockchains. The fee will depend on if the destination blockchain is the native blockchain of the token.
 
-For the case where users are transfering a token that is native from ethereum into alicenet, they can use the Btoken/ALCB contract directly to minimize the gas costs of the transaction. This happens because ALCB is the currency where the fees are charged, and having the transfering entrypoint into the ALCB contract deminish the number of cross-contract calls optimizing the overall transaction's costs. This method will only work on ethereum since the ALCB contract and the rest of economics systems only exists on ethereum. Therefore, the current problem that this specification in trying to solve is, how the fees will be charged on tokens that are native to other blockchain where ALCB does not exists. In other words, how the fee system can be consistent between all chains.
+For the case where users are transferring a token that is native from Ethereum into alicenet, they can use the BToken/ALCB contract directly to minimize the gas costs of the transaction. This is because ALCB is our utility token and it exists on Ethereum. This method will only work on Ethereum since the ALCB contract and the other economic systems only exist on Ethereum. Therefore, the current problem we need to resolve is, having to bridge ALCB to external chains for their native tokens to be transferred to AliceNet
 
 **Solution 1**
 
-Deploy an ALCB bridge wrapper/external pool on every blockchain supported by AliceNet, except for ethereum. With this approach, users will be able to buy ALCB on ethereum, transfer into AliceNet using a bridge pool so they can have the ALCB wrapped inside AliceNet and then transfer the ALCB out of AliceNet and into the chain their tokens are on.
+Deploy an ALCB bridge wrapper/external pool on every blockchain supported by AliceNet, except for Ethereum. With this approach, users can buy ALCB on Ethereum, transfer it to AliceNet, then bridge it out of AliceNet, into the external chain, and then burn it as a deposit fee to bridge a native token from an external chain into AliceNet.
 
 pros:
 
@@ -111,4 +111,5 @@ Not collecting ALCB fees for native token deposits means we can remove the depos
 
 #### Open Questions
 
-<!--- Open questions that need to be answered -->
+how often can we change our fees?
+how are fees calculated?
