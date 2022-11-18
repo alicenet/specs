@@ -5,7 +5,7 @@ discussion: https://github.com/alicenet/specs/discussions/20
 team: Backend
 category: Development
 status: Draft
-related: [Bridge Router](https://github.com/alicenet/alicenet/issues/478)
+related: [Bridge Router](https://github.com/alicenet/alicenet/issues/478) , [Bridge Pool Base](https://github.com/alicenet/specs/pull/16)
 created: 2022-11-17
 ---
 
@@ -65,31 +65,31 @@ Charge no deposit fee for native erc tokens going into AliceNet, charge withdraw
 
 Pros:
 
-- less friction for onboarding new users
-- cheaper than our competitors to enter our chain
-- fees are all collected on AliceNet reducing the number of cross-contract calls
-- incentivizes users to stay in our bridge since the overhead for exiting is higher than staying
+- Less friction for onboarding new users
+- Cheaper than our competitors to enter our chain
+- Fees are all collected on AliceNet reducing the number of cross-contract calls
+- Incentivizes users to stay in our bridge since the overhead for exiting is higher than staying
 
 Cons:
 
-- our validators miss out on fees for every ERC token deposit
+- Our validators miss out on fees for every ERC token deposit
 - ALCB price could be different from the time of entrance and time of exit
-- malicious actors can batch transfer a bunch of worthless NFTs into AliceNet (but the point of layer2 solution is low gas fees so you can mint more useless NFTs)
+- Malicious actors can batch transfer a bunch of worthless NFTs into AliceNet (but the point of layer2 solution is low gas fees so you can mint more useless NFTs)
 
 **Solution 3**
 
-charge no fees on entrance, the user pays for the gas to transfer their token into the bridge pool, and they are charged only a withdrawal fee on AliceNet for exiting Alicenet back to the tokens native chain.
+Charge no fees on entrance, the user pays for the gas to transfer their token into the bridge pool, and they are charged only a withdrawal fee on AliceNet for exiting Alicenet back to the tokens native chain.
 
 Pros:
 
-- way more competitive than anyone
-- can capture more tokens on our chain, even from polygon
-- more users will use our bridge
-- we gain more profit from more transactions on AliceNet
+- Way more competitive than anyone
+- Can capture more tokens on our chain, even from polygon
+- More users will use our bridge
+- We gain more profit from more transactions on AliceNet
 
 Cons:
 
-- we miss out on the deposit fee
+- We miss out on the deposit fee
 
 #### Security / Risks
 
