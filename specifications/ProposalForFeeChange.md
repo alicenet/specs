@@ -47,6 +47,7 @@ pros:
 
 - we get deposit fees
 - disincentivizes users from flooding alicenet with useless coins.
+- possibly increase fees on other layer 2 chains since gas is cheaper there (for another discussion)
 
 cons:
 
