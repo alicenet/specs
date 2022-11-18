@@ -21,7 +21,7 @@ This spec is a proposal to modify change types of fees we collect for our bridgi
 
 #### Goals
 
-create a competitive fee system for our bridge that is gas efficient
+create a competitive fee system for our bridge that is gas efficient, and consistent in all bridges moving tokens into AliceNet
 
 #### Non Goals
 
