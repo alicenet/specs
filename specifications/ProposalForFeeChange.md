@@ -11,7 +11,7 @@ created: 2022-11-17
 
 ## Introduction
 
-AliceNet Bridge allows users to transfer tokens on evm compatible chains into alicenet where fees are less expensive.
+AliceNet Bridge allows users to transfer tokens on EVM compatible chains into AliceNet where fees are less expensive.
 
 #### Summary
 
