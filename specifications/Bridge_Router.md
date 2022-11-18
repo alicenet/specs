@@ -1,5 +1,5 @@
 ---
-title: Bridge Router 
+title: Bridge Router
 author: <!--- Author Name(s) -->
 discussion: <!--- Discussion URL -->
 team: <!--- Backend or Frontend -->
@@ -11,25 +11,32 @@ created: <!--- YYYY-MM-DD -->
 
 ## Introduction
 
-#### Summary   
+#### Summary
+
 <!--- Summary of the spec. Describe what it does -->
 
 #### Context
+
 <!-- Why is this being introduced. Give background and rationale -->
 
 #### Goals
+
 <!--- What is goal this will accomplish -->
 
 #### Non Goals
+
 <!--- What is not to be included with this -->
 
 #### Assumptions
+
 - only native ERC token deposits will require BToken Fees to be collected on layer 1
-- Bridge pools are deployed at deterministic locations with metamorphic initialization code, as EIP 1167 thin proxies. 
+- Bridge pools are deployed at deterministic locations with metamorphic initialization code, as EIP 1167 thin proxies.
 - bridge pool salts are calculated as follows
 - all bridge pools have a deposit and withdraw function that only this contract can call
- 
-``` solidity
+- lock and unlock logic is abstracted in the bridgeCBSetter and bridgeCBResetter upgradeable proxy contracts
+- Bridge pools are deployed at deterministic locations where the salt =
+
+```solidity
   /**
      * @notice calculates salt for a BridgePool contract based on ERC contract's address, tokenType, chainID and version_
      * @param tokenContractAddr_ address of ERC contract of BridgePool
@@ -55,49 +62,60 @@ created: <!--- YYYY-MM-DD -->
             );
     }
 ```
+
 ## Specification
 
 #### Overview
-All erc token deposits and withdraws in and out of alicenet must go through the bridge router. For all ERC token deposits into alicenet a deposit event must be emitted with details specific to the bridge pool being used, and a monotonically increasing nonce for each deposit.
-To withdraw a from alicenet, the utxo that describes the token must be burned, and the user is given a proof to be used with snapshot data for deposits. 
-the hash of the proofs used must be stored in a mapping to prevent it from being used in the future.
 
-since this contract hold privilidges that allows it to move erc tokens in bridge pools, it must not be upgradeable. 
+The Bridge Router is a non-upgradeable contract that tracks deposits, withdraws, and emits deposit events of ERC Tokens going into and out of alicent through the native and external bridge pools.
 
-since the router is the central place where users interact with the bridge pools, it must have a circuit breaker that allows a contract with role circuit breaker to set it. 
+#### Depositing ERC Tokens
 
+For depositing ERC tokens only Native ERC token deposits must come from BToken since the deposit fees for External Token is charged on exit from alicenet. Each deposit must emit an event with details that uniquely describe the ERC transfer, and a unique nonce must also be included in the deposit event for utxo formation.
 
-DepositExternalToken
+#### Withdrawing ERC Tokens
 
-WithdrawTokens
+All withdraw requests to the bridge pools will originate from this contract, and the hash of the proofs used for the withdraw will be recorded in this contract to prevent multiple withdraws with the same burn proof.
+
+#### Fail Safe
+
+since all user interactions with the bridges go through this contract, we will maintain a circuit breaker here such that we can stop all deposits and withdraws on pools implementing a specific version, of bridge pool logic. To save gas on state reads, we can incorporate the lockup logic into the fees since each pool logic type will have its own fees. A pool is locked if the fee is set to max uint256 value
 
 #### Data
 
-
-
 <!-- Data Models / Schemas Requirements -->
+
 For forward compatibility with future pools a dynamic data structure should be used for input data.
 
+```solidity
 
-```solidity 
+struct DepositData {
+    address poolAddress;
+    uint16 poolVersion;
+    uint8 poolType;
+    uint8 ercType;
+    bytes txData;
+}
 
-struct TransactionData {
-      address poolAddress;
-      uint16 poolVersion;
-      uint8 poolType;
-      uint8 ercType;
-      bytes txData;
-  }
+struct WithdrawData{
+    address poolAddress;
+
+}
 ```
 
 #### Logic
-``` solidity 
+
+bellow is an example of a dynamic event emitter. The emitDepositEvent function takes in a bytes32 array of topics, every event must have atleast one topic
+can, events can have up to 4 bytes32 topics, and variables are abi encoded byte strings.
+
+```solidity
 function _emitDepositEvent(bytes32[] memory topics_, bytes memory eventData_) internal {
+        if (topics_.length == 0) revert CentralBridgeRouterErrors.MissingEventSignature();
         if (topics_.length == 1) _log1Event(topics_, eventData_);
         else if (topics_.length == 2) _log2Event(topics_, eventData_);
         else if (topics_.length == 3) _log3Event(topics_, eventData_);
         else if (topics_.length == 4) _log4Event(topics_, eventData_);
-        else revert CentralBridgeRouterErrors.MissingEventSignature();
+        else revert CentralBridgeRouterErrors.TooManyIndexedVariables();
     }
 
     function _log1Event(bytes32[] memory topics_, bytes memory eventData_) internal {
@@ -136,31 +154,35 @@ function _emitDepositEvent(bytes32[] memory topics_, bytes memory eventData_) in
 ```
 
 #### Presentation
+
 <!--- UI / UX / Wireframes / Mockups / Design -->
 
 #### Testing
+
 <!--- Testing Requirements -->
 
 #### Security / Risks
+
 <!--- Security / Risks Considerations -->
 
 ## Further Considerations
 
 #### Alternative Solutions
+
 <!-- Describe alternative solutions or implementations if any exist -->
 
 #### Timeline
+
 <!--- Estimated timeline to complete / list any milestones -->
 
 #### Prioritization
+
 <!--- How this fits into the roadmap -->
 
 #### Dependencies
+
 <!--- Dependencies on other specs -->
 
 #### Open Questions
+
 <!--- Open questions that need to be answered -->
-
-
-
-
