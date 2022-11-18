@@ -46,7 +46,7 @@ Deploy an ALCB bridge wrapper/external pool on every blockchain supported by Ali
 pros:
 
 - we get deposit fees
-- people trying to attack us with shit coins will make eth validators and our validators a lot of money.
+- people trying to attack us with worthless coins will make eth validators and our validators a lot of money.
 
 cons:
 
@@ -54,7 +54,7 @@ cons:
 - users will either have to initiate native token deposit on polygon from a external erc20 alcb bridge pool
 - vulnerable to Btoken price hike, especially if amm pools come into play, it is in our competitors best interest that BToken price is high on their chain
 
-**solution 2**
+**Solution 2**
 
 charge no deposit fee for native erc tokens going into alicenet, charge withdraw and deposit fee on alicenet when exiting alicenet back to the tokens native chain
 
@@ -71,7 +71,7 @@ cons:
 - alcb price could be different from time of entrance and time of exit
 - malicious actors can batch transfer a bunch of worthless nfts into alicenet (but the point of layer2 solution is low gas fees so you can mint more useless nfts)
 
-**solution 3**
+**Solution 3**
 
 charge no fees on entrance, the user pays for the gas to transfer token into the bridge pool, and they are charged only a withdraw fee on AliceNet for exiting Alicenet back to the tokens native chain.
 
