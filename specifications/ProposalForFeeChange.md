@@ -92,7 +92,7 @@ One of the security risk for collecting Btoken on other layer 2 chains is price 
 
 ## Further Considerations
 
-Not collecting ALCB fees for native token deposits means we can remove the deposit token on bridges function, and we can deploy ALCB without finalizing the Bridge Router
+Not collecting ALCB fees for native token deposits means we can remove the deposit token on bridges function in the ALCB contract, and we can deploy ALCB without finalizing the Bridge Router
 
 #### Alternative Solutions
 
