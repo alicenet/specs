@@ -33,7 +33,7 @@ Create a competitive fee system for our bridge that is gas efficient, and consis
 - We want people to transfer high trade volume tokens into AliceNet
 - Our First road block in attracting current crypto users into our echo system is the onboarding overhead. The price of transfering their existing coins could be a point of friction for users considering moving their tokens into AliceNet
 - The amount of high trade volume tokens in our system is directly proportional to the profitability of our system
-- Most users will determine what bridge they will used based on the cost incurred from the transfer
+- Most users will determine what bridge they will use based on the transfer cost
 
 ## Specification
 
