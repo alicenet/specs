@@ -19,7 +19,9 @@ This specification describes the current plans of fee collection for AliceNet br
 
 #### Context
 
-ALCB is the utility token for AliceNet, all transactions on our layer 2 chain are charged in ALCB, and ALCB is native to Ethereum. There are currently two categories of fees and each category has sub-categories based on what pool logic the user is interacting with. For transferring tokens back into their native chain, we charge a withdrawal fee on AliceNet, and for transferring external tokens into external pools, we charge a withdrawal fee and a deposit fee
+ALCB is the utility token for AliceNet, all transactions on our layer 2 chain are charged in ALCB, and ALCB is native to Ethereum. There are currently two categories of fees and each category has sub-categories based on what pool logic the user is interacting with. For transferring tokens back into their native chain, we charge a withdrawal fee on AliceNet, and for transferring external tokens into external pools, we charge a withdrawal fee and a deposit fee.
+
+when ALCB is deposited on Alicenet it is burned on Ethereum, it can never come back to ethereum, and the Eth from the sale of the ALCB is free to be split by the distribution contract. When ALCB is used on Ethereum for bridge token deposit, it is also burned.
 
 #### Goals
 
@@ -31,7 +33,7 @@ Create a competitive fee system for our bridge that is gas efficient, and consis
 
 - All Fees are charged in ALCB
 - We want people to transfer high trade volume tokens into AliceNet
-- Our First road block in attracting current crypto users into our echo system is the onboarding overhead. The price of transfering their existing coins could be a point of friction for users considering moving their tokens into AliceNet
+- Our First road block in attracting current crypto users into our ecosystem is the onboarding overhead. The price of transfering their existing coins could be a point of friction for users considering moving their tokens into AliceNet
 - The amount of high trade volume tokens in our system is directly proportional to the profitability of our system
 - Most users will determine what bridge they will use based on the transfer cost
 
@@ -116,4 +118,6 @@ This blocks development of the bridge since this feature touches on nonupgradeab
 #### Open Questions
 
 how often can we change our fees?
-how are fees calculated?
+how are fees calculated, is it per token or flat fee per transfer?
+whats the difference between ERC20 fees and ERC721 fees?
+How are we calculating fees for ERC1155 batch transfers?
