@@ -19,9 +19,9 @@ This specification describes the current plans of fee collection for AliceNet br
 
 #### Context
 
-ALCB is the ERC20 utility token for AliceNet, all transactions on our layer 2 chain are charged in ALCB, and ALCB is native to Ethereum. There are currently two categories of fees and each category has sub-categories based on what pool logic the user is interacting with. For transferring tokens back into their native chain, we charge a withdrawal fee on AliceNet, and for transferring external tokens into external pools, we charge a withdrawal fee and a deposit fee.
+ALCB is the ERC20 utility/gas token for AliceNet, used to pay for transactions. Part of these transactions consist of fees, which are are not able to be used when the transaction is consumed. In this way, continuous utilization of AliceNet requires more and more deposits of ALCB. burning on Ethereum just entails destroying them (removing them from existence and reducing the total token amount accordingly). Burning must be distinguished from deposits, where the tokens are removed from existence and then total token amount is decreased accordingly, and a deposit utxo is now available for usage in AliceNet. So, deposits and burning are similar, but a careful distinction is required.
 
-When ALCB is deposited on Alicenet it is burned on Ethereum, it can never come back to ethereum, and the Eth from the sale of the ALCB is free to be split by the distribution contract. When ALCB is used on Ethereum for bridge token deposit, it is also burned.
+For bridging there are currently two categories of fees and each category has sub-categories based on what pool logic the user is interacting with, ie ERC20, erc721, or ERC721 pool. For transferring tokens back into their native chain, we charge a withdrawal fee on AliceNet, and for transferring external tokens into external pools, we charge a withdrawal fee and a deposit fee.
 
 #### Goals
 
