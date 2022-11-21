@@ -19,9 +19,9 @@ This specification describes the current plans of fee collection for AliceNet br
 
 #### Context
 
-ALCB is the utility token for AliceNet, all transactions on our layer 2 chain are charged in ALCB, and ALCB is native to Ethereum. There are currently two categories of fees and each category has sub-categories based on what pool logic the user is interacting with. For transferring tokens back into their native chain, we charge a withdrawal fee on AliceNet, and for transferring external tokens into external pools, we charge a withdrawal fee and a deposit fee.
+ALCB is the ERC20 utility token for AliceNet, all transactions on our layer 2 chain are charged in ALCB, and ALCB is native to Ethereum. There are currently two categories of fees and each category has sub-categories based on what pool logic the user is interacting with. For transferring tokens back into their native chain, we charge a withdrawal fee on AliceNet, and for transferring external tokens into external pools, we charge a withdrawal fee and a deposit fee.
 
-when ALCB is deposited on Alicenet it is burned on Ethereum, it can never come back to ethereum, and the Eth from the sale of the ALCB is free to be split by the distribution contract. When ALCB is used on Ethereum for bridge token deposit, it is also burned.
+When ALCB is deposited on Alicenet it is burned on Ethereum, it can never come back to ethereum, and the Eth from the sale of the ALCB is free to be split by the distribution contract. When ALCB is used on Ethereum for bridge token deposit, it is also burned.
 
 #### Goals
 
@@ -113,7 +113,7 @@ This blocks development of the bridge since this feature touches on nonupgradeab
 
 #### Dependencies
 
-<!--- Dependencies on other specs -->
+BridgeRouter, and Bridge pool specs depends on the result of the discussion associated with this spec
 
 #### Open Questions
 
