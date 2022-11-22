@@ -13,15 +13,19 @@ created: 2022-11-15
 
 #### Summary
 
-This specification allows ERC20 tokens to be transferred from Ethereum mainnet into Alicenet and back.
+This specification allows ERC20 tokens to be transferred from Ethereum Mainnet into Alicenet and back.
 
 #### Context
 
-Bridge Pools allow transfers of assets between chains, Alicenet Native Bridge Pools allow transfers between Ethereum mainnet and Alicenet both ways.
-The main reasons for bridging assets into Alicenet is that transfers in Alicenet are:
+Bridge Pools allow transfers of assets between chains, Alicenet Native Bridge Pools allow transfers between Ethereum Mainnet and Alicenet both ways.
+The main reasons for bridging assets into Alicenet is that transactions in Alicenet are:
 * Cheaper than Ethereum
 * Faster than Ethereum
 * As safe as in Ethereum
+
+Bridge Pool contracts operate at high level as following:
+* Upon depositing -> Transfer the tokens from the owner to the Bridge Pool contract and after validation trigger the minting of the tokens on L2 chain.
+* Upon withdrawal -> Trigger the burning of the L2 chain tokens and after validation transfer the tokens from the Bridge Pool Contract to the owner.
 
 #### Goals
 
@@ -39,15 +43,10 @@ Smart contract functions will be called by user through Alicenet Wallet
 
 #### Overview
 
-To enable bridging for a specific ERC20 token, a particular Native Bridge Pool Implementation smart contract should be deployed for the specific ERC20 contract.
-
-These implementations will support multiple version and expose the following operations:
-* Initialize 
-* Deposit
-* Withdraw
-
-These implementations will be deployed by BridgePoolFactory.sol contract through the selection of a specific Bridge Pool Implementation version and will be initialized for the specified ERC contract address.
-A central Bridge Router contract will route calls for depositing/withdrawing to the correct implementation. 
+To enable bridging for a specific ERC20 token the following tasks must be performed:
+* Native Bridge Pool implementations with specific versions should be previously created (EX: NativeERC20BridgePoolV1.sol, NativeERC20BridgePoolV2.sol ), these implementations must inherit from [NativeERCBridgePoolBase.sol](https://github.com/alicenet/specs/pull/16).
+* The selected implementation version should be deployed by the Bridge Pool Factory and initialized with the specified ERC20 token contract address.
+* A central Bridge Router contract will posteriorly route calls for depositing/withdrawing to the correct implementation. 
 
 #### Data
 
@@ -74,18 +73,17 @@ Through this operation Native Bridge Pool contract receives ERC20 contract's add
 
 ##### Deposit function
 
-Deposit function should be called only from Bridge Router with the following parameters:
+Deposit function should be called only through Bridge Router with the following parameters:
 1. Sender address -> EOA of the user who will be sending tokens (not msg.sender)
 2. Amount -> Number of tokens to deposit (uint256)
 
 Upon this call the contract should perform the following operations:
-1. Call deposit function in BridgePoolBase.sol through super.deposit() (this function is right now just a placeholder for future deposit pre-actions).
+1. Call deposit function in NativeERCBridgePoolBase.sol through [super.deposit()](https://github.com/alicenet/specs/pull/16), this function is right now just a placeholder for future deposit pre-actions.
 2. Transfer tokens from the caller to smart contract and hold them indefinitely.
-3. Trigger in Alicenet the minting of deposited tokens (UTXO creation).
 
 ##### Withdraw function
 
-Withdraw function should be called only from BridgeRouter.sol with the following parameters:
+Withdraw function should be called only through BridgeRouter.sol with the following parameters:
 1. Receiver address -> EOA of the user who will be receiving tokens (not msg.sender)
 2. Burned UTXO -> an Alicenet preImage of burned UTXO
 3. Proof of inclusion in StateRoot: Proof of inclusion of UTXO in the stateTrie
@@ -94,50 +92,12 @@ Withdraw function should be called only from BridgeRouter.sol with the following
 6. Proof of inclusion in HeaderRoot: Proof of inclusion of the block header in the header trie
 
 Upon this call the contract should perform the following operations:
-1. Trigger in Alicenet the burning of withdrawn tokens.
-2. Call withdraw function in BridgePoolBase through super.withdraw() (this will execute withdraw pre-actions that involves validation that tokens have been effectively burned by checking the burned UTXO and the Merkle Proofs that verify that it was burned on the past blocks on Alicenet chain). This function will return the actual amount of tokens to transfer.
-3. Register UTXO as already consumed
-4. Transfer token amount from the contract to the specified receiver.
-
-###### UTXO structure
-
-This is an Alicenet Value Store UTXO structure:
-```solidity
-    struct VSPreImage {
-        uint32 txOutIdx;
-        uint32 chainId;
-        uint256 value;
-        uint8 valueStoreSVA;
-        uint8 curveSecp256k1;
-        address account;
-        bytes32 txHash;
-    }
-```
-A specific Alicenet structure with additional fields like ERC20 contract address and multiple values should be created for bridging.
-For VSPreImage parsing a VSPreImageParserLibrary.sol should be defined.
-
-###### Proofs validation
-
-These libraries can be used for proof validation:
-1. MerkleProofParserLibrary.sol -> Parse proof bytes into a proof structure.
-2. MerkleProofLibrary.sol -> Verify inclusion of proof on block claims.
-
-Validation of the Merkle Proof against involves the following steps:
-1. Obtain last block claims from Snapshots contract.
-2. Validate proofInclusionHeaderRoot against block claims headerRoot.
-3. Validate proofInclusionTxRoot against block claims txRoot.
-4. Validate proofOfInclusionTxHash against the target hash from proofInclusionTxRoot.
-5. Validate proofOfInclusionTxHash against block claims stateRoot.
+1. Call withdraw function in NativeERCBridgePoolBase.sol through  [super.withdraw()](https://github.com/alicenet/specs/pull/16), upon proof verification this call will return token amount to transfer.
+2. Transfer returned token amount from the ERC20 contract to the specified receiver.
 
 #### Error Handling
 
-The smart contract should handle the following errors:
-1. OnlyBridgePool -> The caller is not Bridge Pool.
-2. ChainIdDoesNotMatch -> Chain ID in UTXO is different than chain ID in block claims.
-3. UTXODoesnotMatch -> Key in proof of inclusion for state root is different than Key in proof of inclusion for TxHash.
-4. UTXOAlreadyWithdrawn -> UTXO has already been consumed.
-5. UTXOAccountDoesNotMatchReceiver -> The owner of burned UTXO is not the receiver in call.
-6. MerkleProofKeyDoesNotMatchUTXOID -> The specified UTXOID is not included on proofs.
+The errors thrown by this contract are specified in [NativeERCBridgePoolBase.sol](https://github.com/alicenet/specs/pull/16) parent contract. 
 
 #### Testing
 
@@ -160,8 +120,8 @@ N/A
 #### Security / Risks
 
 The following risks should be taken in account on withdraw function:
-* Call with fake Merkle Proofs that satisfies proof verification.
-* Force of getLatestSnapshot() on Snapshots.sol to provide fake Block Claims that satisfies proof verification.
+* Calling with fake Merkle Proofs that satisfies proof verification.
+* Forcing of getLatestSnapshot() on Snapshots.sol to provide fake Block Claims that satisfies proof verification.
 
 ## Further Considerations
 
@@ -179,8 +139,8 @@ N/A
 
 #### Dependencies
 
-Bridge Pool Factory and Central BridgeRouter
+NativeERCBridgePoolBase, Bridge Pool Factory and Central BridgeRouter
 
 #### Open Questions
 
-Can this be implemented with ERC1155?
+Can this be implemented through ERC1155?
