@@ -18,18 +18,22 @@ This specification describes the Smart Contracts that allow ERC tokens to be tra
 #### Context
 
 Bridge Pools allow transfers of assets between chains, Alicenet Native Bridge Pools allow transfers between Ethereum Mainnet and Alicenet both ways.
-The main reasons for bridging assets into Alicenet is that transfers in Alicenet are:
+The main reasons for bridging assets into Alicenet is that transactions in Alicenet are:
 * Cheaper than Ethereum
 * Faster than Ethereum
 * As safe as in Ethereum
 
+At high level Bridge Pool contracts operate as following:
+* Upon token depositing -> Transfer the tokens from the owner to the Bridge Pool contract and after validation trigger the minting of corresponding tokens on L2 chain.
+* Upon token withdrawing -> Trigger the burning of the L2 chain corresponding tokens and after validation transfer the tokens from the Bridge Pool Contract to the owner.
+
 #### Goals
 
-Provide an abstract smart contract (BridgePoolBase.sol) with common required actions for Native Bridge Pools implementations in order to allow them to transfer assets from Ethereum to Alicenet and vice versa.
+Provide an abstract smart contract (BridgePoolBase.sol) with common required actions for Native Bridge Pools implementations in order to allow them to transfer assets from Ethereum Mainnet to Alicenet and vice versa.
 
 #### Non Goals
 
-Do not perform transfers, only provide common required actions accessible with super operator.
+Do not perform transfers, only provide common required actions for inheriting contracts via with super operator.
 
 #### Assumptions
 
@@ -39,7 +43,7 @@ Smart contract functions will be called by Native Bridge Pool ERC implementation
 
 #### Overview
 
-To enable bridging for a specific ERC20 token, a particular Native Bridge Pool Implementation smart contract should be deployed for the specific ERC contract.
+To enable bridging for a specific ERC token, a particular Native Bridge Pool Implementation smart contract should be deployed for the specific ERC contract.
 
 These implementations will inherit from BridgePoolBase.sol hence exposing the following operations:
 * Initialize -> Restricted only from BridgePoolFactory
@@ -153,8 +157,8 @@ N/A
 #### Security / Risks
 
 The following risks should be taken in account on withdraw function:
-* Call with fake Merkle Proofs that satisfies proof verification.
-* Force of getLatestSnapshot() on Snapshots.sol to provide fake Block Claims that satisfies proof verification.
+* Calling with fake Merkle Proofs that satisfies proof verification.
+* Forcing of getLatestSnapshot() on Snapshots.sol to provide fake Block Claims that satisfies proof verification.
 
 ## Further Considerations
 
