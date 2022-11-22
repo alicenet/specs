@@ -1,12 +1,12 @@
 ---
 title: Native Bridge Pool ERC20
 author: @gusjavaz
-discussion: alicenet/issues/404
+discussion: https://github.com/alicenet/specs/issues/9
 team: Backend
 category: Development
 status: Draft
-related: alicenet/issues/423
-created: 2022-11-15
+related: https://github.com/alicenet/alicenet/issues/423
+created: 2022-11-22
 ---
 
 ## Introduction
@@ -17,15 +17,7 @@ This specification allows ERC20 tokens to be transferred from Ethereum Mainnet i
 
 #### Context
 
-Bridge Pools allow transfers of assets between chains, Alicenet Native Bridge Pools allow transfers between Ethereum Mainnet and Alicenet both ways.
-The main reasons for bridging assets into Alicenet is that transactions in Alicenet are:
-* Cheaper than Ethereum
-* Faster than Ethereum
-* As safe as in Ethereum
-
-Bridge Pool contracts operate at high level as following:
-* Upon depositing -> Transfer the tokens from the owner to the Bridge Pool contract and after validation trigger the minting of the tokens on L2 chain.
-* Upon withdrawal -> Trigger the burning of the L2 chain tokens and after validation transfer the tokens from the Bridge Pool Contract to the owner.
+For Context please refer to [Native ERC Bridge Pool Base](https://github.com/alicenet/specs/pull/16).
 
 #### Goals
 
@@ -33,7 +25,7 @@ Allow for ERC20 assets to be transferred from Ethereum to Alicenet and back.
 
 #### Non Goals
 
-Do not enable transfers between Alicenet and other L2 chains
+Do not enable ERC20 token bridging between Alicenet and other L2 chains
 
 #### Assumptions
 
@@ -43,10 +35,7 @@ Smart contract functions will be called by user through Alicenet Wallet
 
 #### Overview
 
-To enable bridging for a specific ERC20 token the following tasks must be performed:
-* Native Bridge Pool implementations with specific versions should be previously created (EX: NativeERC20BridgePoolV1.sol, NativeERC20BridgePoolV2.sol ), these implementations must inherit from [NativeERCBridgePoolBase.sol](https://github.com/alicenet/specs/pull/16).
-* The selected implementation version should be deployed by the Bridge Pool Factory and initialized with the specified ERC20 token contract address.
-* A central Bridge Router contract will posteriorly route calls for depositing/withdrawing to the correct implementation. 
+For Overview please refer to [Native ERC Bridge Pool Base](https://github.com/alicenet/specs/pull/16).
 
 #### Data
 
@@ -73,26 +62,18 @@ Through this operation Native Bridge Pool contract receives ERC20 contract's add
 
 ##### Deposit function
 
-Deposit function should be called only through Bridge Router with the following parameters:
-1. Sender address -> EOA of the user who will be sending tokens (not msg.sender)
-2. Amount -> Number of tokens to deposit (uint256)
+For deposit parameters plase refer to [Native ERC Bridge Pool Base](https://github.com/alicenet/specs/pull/16).
 
-Upon this call the contract should perform the following operations:
+Upon this call, the contract should perform the following operations:
 1. Call deposit function in NativeERCBridgePoolBase.sol through [super.deposit()](https://github.com/alicenet/specs/pull/16), this function is right now just a placeholder for future deposit pre-actions.
 2. Transfer tokens from the caller to smart contract and hold them indefinitely.
 
 ##### Withdraw function
 
-Withdraw function should be called only through BridgeRouter.sol with the following parameters:
-1. Receiver address -> EOA of the user who will be receiving tokens (not msg.sender)
-2. Burned UTXO -> an Alicenet preImage of burned UTXO
-3. Proof of inclusion in StateRoot: Proof of inclusion of UTXO in the stateTrie
-4. Proof of inclusion in TXRoot: Proof of inclusion of the transaction included in the txRoot trie.
-5. Proof of inclusion in TXHash: Proof of inclusion of txOut in the txHash trie
-6. Proof of inclusion in HeaderRoot: Proof of inclusion of the block header in the header trie
+For withdraw parameters plase refer to [Native ERC Bridge Pool Base](https://github.com/alicenet/specs/pull/16).
 
-Upon this call the contract should perform the following operations:
-1. Call withdraw function in NativeERCBridgePoolBase.sol through  [super.withdraw()](https://github.com/alicenet/specs/pull/16), upon proof verification this call will return token amount to transfer.
+Upon this call, the contract should perform the following operations:
+1. Call withdraw function in [NativeERCBridgePoolBase.sol](https://github.com/alicenet/specs/pull/16) through super.withdraw(), upon proof verification this call will return token amount to transfer.
 2. Transfer returned token amount from the ERC20 contract to the specified receiver.
 
 #### Error Handling
@@ -119,9 +100,7 @@ N/A
 
 #### Security / Risks
 
-The following risks should be taken in account on withdraw function:
-* Calling with fake Merkle Proofs that satisfies proof verification.
-* Forcing of getLatestSnapshot() on Snapshots.sol to provide fake Block Claims that satisfies proof verification.
+For Security / Risks please refer to [Native ERC Bridge Pool Base](https://github.com/alicenet/specs/pull/16).
 
 ## Further Considerations
 
@@ -139,7 +118,7 @@ N/A
 
 #### Dependencies
 
-NativeERCBridgePoolBase, Bridge Pool Factory and Central BridgeRouter
+[Native ERC Bridge Pool Base](https://github.com/alicenet/specs/pull/16), Bridge Pool Factory and Central BridgeRouter
 
 #### Open Questions
 
