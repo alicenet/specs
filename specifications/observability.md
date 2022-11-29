@@ -78,7 +78,29 @@ simplify the method signatures we should move to having log entries populated in
 
 #### Metrics Export
 
-WIP
+Currently no metrics are exported from an AliceNet node. With metrics being exported to
+[GCP Operations Suite](https://cloud.google.com/products/operations) there will be the
+opportunity to monitor the overall state of the system under our control as well as alert
+on liveness indicators.
+
+The following metrics should be exported as part of our code base:
+
+- Peering
+  - Number of connected peers, by type
+  - Number of exchanged messages
+- Dynamics
+  - The value of each variable in dynamics
+- Blocks
+  - Current epoch
+  - Number of blocks
+  - Number of transactions
+- Bridge
+  - Number of events seen by type
+
+In addition to those metrics, the following metrics should be set up to have alerting:
+
+- Disk usage
+- CPU usage
 
 #### Security / Risks
 
