@@ -104,3 +104,14 @@ $a$, $b$, $c$, and $d$.
 Together, $P$ and $P^{-1}$ may be used to perform
 minting and burning operations for the bonding curve
 defined by $\rho$.
+
+This bonding curve is also discussed in a related article
+[here](https://github.com/alicenet/.github/blob/main/docs/bonding_curve.pdf).
+
+### Implementation Notes
+
+Because this algorithm is implemented within Solidity,
+all of the operations are performed on integers (`uint256`).
+This requires the use of an Integer Square Root function.
+A discussion on computing the Integer Square Roots may be found
+[here](https://github.com/alicenet/.github/blob/main/docs/efficient_isqrt.pdf).
