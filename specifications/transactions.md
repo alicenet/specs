@@ -32,7 +32,6 @@ there is also a minimum size cost
 (for associated storage related to the DataStore)
 and a per-epoch fee.
 
-
 ```
 DataStore {
     DSLinker  (DSLinker)
@@ -94,8 +93,7 @@ DataStoreSignature {
       specifies the epoch in which the DataStore was issued;
       **must** be nonzero
     - Index:
-      specifies the index where the data is store;
-      **must** be a 32 byte array
+      specifies the index where the data is store
     - RawData:
       specifies the raw data to be stored;
       **must** be nonzero length byte array (upper bound **TBD**)
@@ -161,7 +159,6 @@ ValueStoreSignature {
 }
 ```
 
-
  *  ValueStore
     - Stuff
     - Stuff
@@ -196,13 +193,65 @@ ValueStoreSignature {
 ### UTXO
 
 UTXOs are Unspent Transaction Outputs.
-A UTXO may be either a ValueStore or a DataStore.
+A UTXO may be either a ValueStore or a DataStore
+and is denoted as `TxOut`.
+
+```
+TxOut {
+    union {
+        DataStore  (DataStore)
+        ValueStore (ValueStore)
+    }
+}
+```
 
 ### TXIN
 
 TXINs are Transaction Inputs;
 UTXOs are converted into TXINs when they are set to be consumed
-by a transaction.
+by a transaction;
+they are denoted as `TxIn`.
+
+```
+TxIn {
+    TxInLinker (TxInLinker)
+    Signature  (byte array)
+}
+```
+
+```
+TxInLinker {
+    TxInPreImage (TxInPreImage)
+    TxHash       (32 byte array)
+}
+```
+
+```
+TxInPreImage {
+    ChainID          (uint32)
+    ConsumedTxOutIdx (uint32)
+    ConsumedTxHash   (32 byte array)
+}
+```
+
+ *  TxIn
+    - TxInLinker:
+      specifies the TxInLinker object
+    - Signature:
+      specifies the signature of the object
+ *  TxInLinker
+    - TxInPreImage:
+      specifies the TxInPreImage object
+    - TxHash:
+      specifies the transaction hash of the object
+ *  TxInPreImage
+    - ChainID:
+      specifies the ChainID for this object;
+      **must** be nonzero
+    - ConsumedTxIdx:
+      specifies the TxOutIdx of the UTXO being consumed
+    - ConsumedTxHash:
+      specifies the TxHash of the UTXO being consumed
 
 ### Tx
 
