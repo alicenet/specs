@@ -57,6 +57,13 @@ Whenever a validator is accused, validators keep track of this be storing evicte
 
 Smart contracts in the Ethereum mainnet receive and verify accusation proof data using merkle proofs and signature validations. Examples of existing accusation smart contracts can be found for [multiple proposals](https://github.com/alicenet/alicenet/pull/37/files#diff-c61b5edf4da5e02009378cd2307b91d4c37d46cdcddb04d04d67a019faf5e84dR39), [invalid UTXO consumption](https://github.com/alicenet/alicenet/pull/37/files#diff-cfd0be5e9ca0938babbbde8460a189be71fd805ba34e0dc53a92b584192164e5R123), and [double spending of UTXOs](https://github.com/alicenet/alicenet/pull/37/files#diff-cfd0be5e9ca0938babbbde8460a189be71fd805ba34e0dc53a92b584192164e5R113).
 
+Each accusation has a unique deterministic ID that enables other validators to know whether a specific accusation has taken place or not. This ID is generated using the following data:
+- Proposer address
+- Chain ID
+- AliceNet Height
+- AliceNet Round
+- Type of accusation, here represented as a keccak256 of the accusation name
+
 #### Logic
 <!--- APIs / Pseudocode / Flowcharts / Conditions / Limitations -->
 
@@ -64,15 +71,15 @@ Requirements:
 - The accusation manager must poll and analyze round state data at least twice as fast as the consensus loop
 
 API:
-- Manager.Poll() - the accusation manager struct exposes a method to poll the database for round states. This method is called by the engine loop.
-- Database.GetEvictedValidatorsByGroupKey()
-- Database.SetEvictedValidator()
-- Database.IsValidatorEvicted()
-- Database.DeleteAllEvictedValidators()
-- Database.SetAccusationRaw()
-- Database.GetAccusationRaw()
-- Database.GetAccusations()
-- Database.DeleteAccusation()
+- `Manager.Poll()` - the accusation manager struct exposes a method to poll the database for round states. This method is called by the engine loop.
+- `Database.GetEvictedValidatorsByGroupKey()`
+- `Database.SetEvictedValidator()`
+- `Database.IsValidatorEvicted()`
+- `Database.DeleteAllEvictedValidators()`
+- `Database.SetAccusationRaw()`
+- `Database.GetAccusationRaw()`
+- `Database.GetAccusations()`
+- `Database.DeleteAccusation()`
 
 Conditions:
 - The accusation system only runs when consensus is in sync.
@@ -80,6 +87,29 @@ Conditions:
 Limitations:
 - Detecting some malicious acts is in some cases unpractical at this level given how malicious proposal data is verified and discarded in others parts of the codebase, without ever reaching the accusation system and the detection algorithms.
 - Reproducing and testing some accusation scenarios is not a trivial task.
+
+Pseudocode:
+1. The engine synchronizer loop calls the manager's `Poll()` method to trigger the accusation system
+2. The accusation manager polls the database for the current round states
+3. For each round state, it checks if it was processed before and if not, processes it through a pipeline of detection algorithms
+4. If no accusation was found, it continues looking into other round states
+5. If an accusation is found, the detection algorithm returns an accusation submission task ready to be executed, which is then sent to the Task Manager
+6. Once the accusation is submitted and the validator is evicted, the task finishes and the accusation manager clears up the database
+
+Deterministic accusation ID:
+
+To determine an accusation ID, a keccak256 hash is calculated on the data like so:
+```
+var preSalt []byte = keccak256([]byte("AccusationMultipleProposal"))
+
+var id []byte = keccak256(
+  proposerAddress,
+  chainID,
+  height,
+  round,
+  preSalt,
+)
+```
 
 #### Presentation
 
@@ -113,4 +143,4 @@ N/A
 
 #### Open Questions
 
-N/A
+- Accusation IDs are stored independently per accusation class. Should we aggregate all the IDs in a single place for ease of use?
