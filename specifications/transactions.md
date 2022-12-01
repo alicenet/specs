@@ -10,6 +10,10 @@ created: 2022-11-22
 
 We present the formal specification of the transaction object.
 
+Note: all references to the hash function `Hash`
+will refer to `Keccak256` unless specified otherwise;
+it has a 32 byte (256 bit) hash digest.
+
 ## Introduction
 
 The transaction is central to AliceNet:
@@ -285,10 +289,63 @@ Tx {
 
 ## Transaction Validation
 
+For a transaction to be valid, it must
+ *  have at least one TxIn
+ *  have at least one UTXO
+ *  have a valid fee
+ *  have valid transaction indices on all new UTXOs
+ *  have valid datastore indices
+ *  have valid inputs (unique)
+ *  have matching input and output values
+ *  have valid fees
+ *  have valid txhash
+
+Before a transaction is processed,
+all of its TxIn values must have valid signatures.
+
 ## Transaction Hashing
 
 Every transaction is referred to by its transaction hash (txhash).
 This value uniquely specified a transaction.
+
+### `utxoID`
+
+In order to perform transaction hashing,
+we must first identify the parts of the transaction;
+in particular, we must identify the TxIns and UTXOs.
+To do this, we specify a `utxoID` for each object.
+
+#### `utxoID`s for TxIns
+
+We specify the `utxoID` for TxIns as
+
+```
+utxoID = Hash(ConsumedTxHash, ConsumedTxIdx)
+```
+
+In this case, `ConsumedTxIdx` is serialized as a big endian integer.
+
+#### `utxoID`s for UTXOs
+
+We specify the `utxoID` for UTXOs as
+
+```
+prehash = Hash(encode(utxo))
+utxoID  = Hash(prehash, utxo.TxOutIdx)
+```
+In this case, `TxOutIdx` is serialized as a big endian integer.
+Also, the `utxo` must first be serialized in a deterministic manner.
+
+#### Discussion about `utxoID`s
+
+It is recognized that there is an extremely small (albeit nonzero)
+probability that two different values may produce
+the same hash output;
+this is called a
+[hash collision](https://en.wikipedia.org/wiki/Hash_collision).
+We note that the work required to find a generic hash collision
+for a 256 bit hash function is approximately $2^{128}$;
+this is believed to be impractical.
 
 ## Versions
 
@@ -298,5 +355,3 @@ We list all version information here.
 
  *  Version Number: 0
  *  Metadata: **must** be empty
- *  Vin:  array of txin objects; **must** have at least 1 txin
- *  Vout: array of utxo objects; **must** have at least 1 utxo
