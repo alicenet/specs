@@ -84,7 +84,7 @@ DataStoreSignature {
     - DSPreImage:
       specifies the DSPreImage
     - Txhash:
-      specifies the transactions hash
+      specifies the transaction hash
  *  DSPreImage
     - ChainID:
       specifies the ChainID for this object;
@@ -160,8 +160,10 @@ ValueStoreSignature {
 ```
 
  *  ValueStore
-    - Stuff
-    - Stuff
+    - VSPreImage:
+      specifies the VSPreImage
+    - TxHash:
+      specifies the transaction hash
  *  VSPreImage
     - ChainID:
       specifies the ChainID for this object;
@@ -255,16 +257,31 @@ TxInPreImage {
 
 ### Tx
 
+The transaction object is central to AliceNet.
 
+```
+Tx {
+    Version  (uint32)
+    Metadata (byte array)
+    Fee      (uint256)
+    Vin      (list of TxIn)
+    Vout     (list of TxOut)
+}
+```
 
-## Transaction Object
-
-The transaction object will have the following subobjects:
-
- *  Version number (uint32): specify which transaction version is being used
- *  Metadata (bytes array): additional data for processing; may be empty
- *  Vin (list of txin objects): a list of consumed utxos
- *  Vout (list of utxo objects): a list of newly created utxos
+ *  Tx
+    - Version:
+      specifies the version of the transaction object
+    - Metadata:
+      specifies additional data required for transaction processing
+    - Fee:
+      specifies the total transaction fee
+    - Vin:
+      specifies the list of consumed UTXOs;
+      **must** be nonempty
+    - Vout:
+      specifies the list of new UTXOs;
+      **must** be nonempty
 
 ## Transaction Validation
 
