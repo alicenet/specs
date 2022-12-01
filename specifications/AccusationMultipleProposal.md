@@ -103,4 +103,4 @@ Accusation System [spec](https://github.com/alicenet/specs/issues/6) and [PR](ht
 
 #### Open Questions
 
-N/A
+- Under this accusation, should a validator be `minor` or `major` slashed?
