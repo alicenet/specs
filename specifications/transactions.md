@@ -311,9 +311,7 @@ before we talk about transaction hashing.
 Our discussion is based on the
 [OpenZeppelin Merkle tree library](https://github.com/OpenZeppelin/merkle-tree).
 
-Given $k$ leaves wth $k>0$ with data
-$[D_{0}, D_{1}, \dots , D_{k-1}]$,
-we can compute the Merkle Tree root hash using
+We can compute the Merkle Tree root hash using
 the following functions:
 
 ```
@@ -350,13 +348,16 @@ by making a distinction between leaf nodes and interior nodes.
 ## Transaction Hashing
 
 Every transaction is referred to by its transaction hash (txhash).
-This value uniquely specified a transaction.
+This value is meant to uniquely specify a transaction
+and should be determined deterministically from
+the consumed inputs and created outputs.
+Before discussing the precise method of computing transaction hashes,
+we first discuss how to identify TxIns and UTXOs.
 
-### `utxoID`
+### `utxoID`s
 
-In order to perform transaction hashing,
-we must first identify the parts of the transaction;
-in particular, we must identify the TxIns and UTXOs.
+We now focus on uniquely identifying transaction inputs and outputs;
+that is, we must identify the TxIns and UTXOs.
 To do this, we specify a `utxoID` for each object.
 
 #### `utxoID`s for TxIns
@@ -380,7 +381,59 @@ utxoID  = Hash(prehash, utxo.TxOutIdx)
 In this case, `TxOutIdx` is serialized as a big endian integer.
 Also, the `utxo` must first be serialized in a deterministic manner.
 
-#### Discussion about `utxoID`s
+### `TxHash`es
+
+The transaction hash `TxHash` will uniquely identify a transaction.
+It does this using its Version number, Metadata, TxIns,
+and UTXOs.
+
+We use the following algorithm:
+
+```
+def ComputeTxHash(version, metadata, txins, utxos)
+    v  = LeafHash(00000000||version)
+    md = LeafHash(00000001||metadata)
+    tmp1 = HashPair(v, md)
+    vinHash  = ComputeVinHash(txins)
+    voutHash = ComputeVoutHash(utxos)
+    tmp2 = HashPair(vinHash, voutHash)
+    txhash = HashPair(tmp1, tmp2)
+    return txhash
+
+def ComputeVinHash(txins)
+    Leaves = []
+    for (k = 0; k < len(txins); k++)
+        txin = txins[k]
+        utxoID = makeUTXOID(txin)
+        leaf = LeafHash(00000002||utxoID)
+        Leaves = append(Leaves, leaf)
+    vin = ComputeRootHash(Leaves)
+    return vin
+
+def ComputeVoutHash(utxos)
+    Leaves = []
+    for (k = 0; k < len(utxos); k++)
+        utxo = utxos[k]
+        utxoID = makeUTXOID(utxo)
+        leaf = LeafHash(00000002||utxoID)
+        Leaves = append(Leaves, leaf)
+    vout = ComputeRootHash(Leaves)
+    return vout
+
+def makeUTXOID(value)
+    if IsValidTXIN(value):
+        consumedTxHash = value.ConsumedTxHash
+        consumedTxIdx  = value.ConsumedTxIdx
+        return Hash(consumedTxHash||consumedTxIdx)
+    else if IsValidUTXO(value):
+        prehash  = Hash(encode(value))
+        txOutIdx = value.TxOutIdx
+        return Hash(prehash||txOutIdx)
+    else:
+        return "Error: Invalid object"
+```
+
+### Discussion about `utxoID`s and `TxHash`es
 
 It is recognized that there is an extremely small (albeit nonzero)
 probability that two different values may produce
@@ -390,6 +443,11 @@ this is called a
 We note that the work required to find a generic hash collision
 for a 256 bit hash function is approximately $2^{128}$;
 this is believed to be impractical.
+That is, while it is technically **possible** for two different
+consumed UTXOs to produce the same `utxoID`,
+it is thought to be **impractical**.
+The same comment applies to two different transactions
+producing the same `TxHash`.
 
 ## Versions
 
