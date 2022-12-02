@@ -73,7 +73,7 @@ A_g = \sum_{i=1}^{\infty} {D_i \over T_i}
 
 The global accumulator $A_g$ of an asset (`ALCA` or `ether`) will keep track of the summation of all the deposit of that assets $D_i$ divided by total ALCA shares staked in the contract at the moment of the deposit $T_i$.
 
-By using the accumulators defined by [**equation 1**](#eq1) we can compute the yields/profits ($Y_p$) of a position with [**equation 2**](#eq2) down below:
+By using the accumulators defined by [**equation 1**](#eq1) we can compute the yields/profits ( $Y_p$ ) of a position with [**equation 2**](#eq2) down below:
 
 **<a name="eq2">Equation 2: Yield collection equation:</a>**
 ```math
@@ -82,7 +82,7 @@ Y_p = S_p (A_g - A_p)
 
 Where, $S_p$ is the shares of the `staked position`, $A_g$ is the current value of the global accumulator of the desired asset (`ether` or `ALCA`), and $A_p$ is the last value of $A_g$ at the time of the last yield collection for a position (`accumulatorEth` and `accumulatorToken` defined in [**table 1**](#table1)).
 
-**During stake position minting, the value of both accumulators will be set to the latest value of the global accumulators ($A_g = A_p$) which will result in $Y_p = 0$ right after the minting**. Therefore, a position will only have yields if a deposit is made after its minting.
+**During stake position minting, the value of both accumulators will be set to the latest value of the global accumulators ( $A_g = A_p$ ) which will result in $Y_p = 0$ right after the minting**. Therefore, a position will only have yields if a deposit is made after its minting.
 
 Different from the ALCA shares stored inside the `staked position`, the profits (`ALCA` or `ether`) will be liquidity. Therefore, the users will receive the assets in the chosen wallets when collecting the profits.
 
