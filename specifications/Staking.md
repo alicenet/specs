@@ -17,7 +17,7 @@ This specification proposes a mechanism to stake the ALCA tokens to aggregate mo
 
 ### Context
 
-Once we release the Alicenet economics system, users will be able to get ALCA by migrating the old token (MadToken) directly into the ALCA smart contract. In addition to this, we also foresee the creation of AMM pools with ALCA in the popular markets (UNISWAP V3, Balancer, etc), where users will be able to buy ALCA directly using different currencies.
+Once we release the Alicenet economics system, users will be able to get ALCA by migrating the old token (MadToken) directly into the ALCA smart contract. In addition to this, we also foresee the creation of AMM pools with ALCA in popular markets (UNISWAP V3, Balancer, etc), where users will be able to buy ALCA directly using different currencies.
 
 However, a token without a purpose doesn't worth much. In order to add a role for ALCA token to incentivize users to buy it, this specification proposes a staking contract.
 
@@ -29,7 +29,7 @@ Add a purpose to the ALCA token to generate value.
 ### Assumptions
 <!-- Conditions and resources that need to be present and accessible for the solution to work as described -->
 
-The ALCA contracts is deployed and available.
+The ALCA contract is deployed and available.
 
 #### Testing
 <!--- Testing Requirements -->
@@ -47,42 +47,44 @@ If not implemented correctly, users may lose ALCA staked into the system.
 ### Overview
 <!--- Describe the solution in detail -->
 
-AliceNet users will be able to stake their ALCA in a smart contract known as `PublicStaking` and participate of the yield distribution of the ALCB selling. As a result of staking an amount $S$ of ALCA in the contract, the users will be receiving a `Non-Fungible Token` (NFT) that describes the properties of the `staked position`. The [**table 1**](#table1) below shows the structure of the `staked positions` NFT.
+AliceNet users will be able to stake their ALCA in a smart contract known as `PublicStaking` and participate in the yield distribution of the ALCB selling. As a result of staking an amount $S$ of ALCA in the contract, the users will be receiving a `Non-Fungible Token` (NFT) that describes the properties of the `staked position`. [**Table 1**](#table1) below shows the structure of the `staked positions` NFT.
 
 **<a name="table1">Table 1: Staked Position structure:</a>**
 
-| field             | definition                                                                    |
-| ----------------- | ----------------------------------------------------------------------------- |
-| tokenID           | unique identify starting at 1 that will be used to identify a staked position |
-| shares            | the number of ALCA staked    in this position                                 |
-| freeAfter         | block number after which the position may be burned                           |
-| withdrawFreeAfter | block number after which the position may be collected                        |
-| accumulatorEth    | the value of the global ether accumulator this account performed withdraw at  |
-| accumulatorToken  | the value of the global token accumulator this account performed withdraw at  |
+| field             | definition                                                                      |
+| ----------------- | ------------------------------------------------------------------------------- |
+| tokenID           | unique identifier starting at 1 that will be used to identify a staked position |
+| shares            | the number of ALCA staked    in this position                                   |
+| freeAfter         | block number after which the position may be burned                             |
+| withdrawFreeAfter | block number after which the position may be collected                          |
+| accumulatorEth    | the value of the global ether accumulator this account performed withdrawal at  |
+| accumulatorToken  | the value of the global token accumulator this account performed withdrawal at  |
 
-The `shares` field accounts for how much `ALCA` was staked in the contract for that position. The `ALCA` staked will be illiquid until the position is burned and due to the nature of the NFTs, the user will not be able to change the amount staked unless he burns the position and re-stake it. The fields `freeAfter` and `withdrawFreeAfter` can be used to lock a position from being burned. These fields allow multiple uses of staking position including selling in external markets or even using a staked position as `future contract` for `ether` and ALCA price. The local accumulators `accumulatorEth` and `accumulatorToken` will be used to compute the yield of a position as will be explained down below.
+The `shares` field accounts for how much `ALCA` was staked in the contract for that position. The `ALCA` staked will be illiquid until the position is burned and due to the nature of the NFTs, the user will not be able to change the amount staked unless he burns the position and re-stakes it. The fields `freeAfter` and `withdrawFreeAfter` can be used to lock a position from being burned. These fields allow multiple uses of staking positions including selling in external markets or even using a staked position as a `future contract` for `ether` and ALCA price. The local accumulators `accumulatorEth` and `accumulatorToken` will be used to compute the yield of a position as will be explained down below.
 
-Each staked NFT position will be identified via a unique identifier called `tokenID_` that is not stored inside the NFT position. The first position will start with the `tokenID=1` and sub-sequent minted positions will have an incremental `tokenIDs`, e.g 2, 3, 4, etc.
+Each staked NFT position will be identified via a unique identifier called `tokenID_` that is not stored inside the NFT position. The first position will start with the `tokenID=1` and subsequent minted positions will have incremental `tokenIDs`, e.g 2, 3, 4, etc.
 
-Users that choose to stake their `ALCA` (stake holders) will be gaining yield in form of `ether` and `ALCA`. The `PublicStaking` contract will be receiving `ether` that will be coming from the directly sell of the ALCB token in the ALCB contract (**NOT FROM ALCB SOLD IN EXTERNAL AMM POOLS!**) and will also be receiving `ALCA` coming from the eventual `slash` of bad validators. The received assets will be stored in a global accumulator per asset (ALCA or `ether`) that can be modeled by [**equation 1**](#eq1) and will be distributed to the stake holders.
+Users that choose to stake their `ALCA` (stakeholders) will be gaining yield in the form of `ether` and `ALCA`. The `PublicStaking` contract will be receiving `ether` that will be coming from the direct sell of the ALCB token in the ALCB contract (**NOT FROM ALCB SOLD IN EXTERNAL AMM POOLS!**) and will also be receiving `ALCA` coming from the eventual `slash` of bad validators. The received assets will be stored in a global accumulator per asset (ALCA or `ether`) that can be modeled by [**equation 1**](#eq1) and will be distributed to the stakeholders.
 
 **<a name="eq1">Equation 1: Accumulator logic:</a>**
 $$ A_g = \sum_{i=1}^{\infty} {D_i \over T_i} $$
 
-The global accumulator $A_g$ of an asset (`ALCA` or `ether`) will keep track of summation of all the deposit of that assets $D_i$ divided by total ALCA shares staked in the contract at the moment of the deposit $T_i$.
+The global accumulator $A_g$ of an asset (`ALCA` or `ether`) will keep track of the summation of all the deposit of that assets $D_i$ divided by total ALCA shares staked in the contract at the moment of the deposit $T_i$.
 
-By using the accumulators defined by [**equation 1**](#eq1) we can compute the yields/profits ($Y_p$) of a position with the [**equation 2**](#eq2) down below:
+By using the accumulators defined by [**equation 1**](#eq1) we can compute the yields/profits ($Y_p$) of a position with [**equation 2**](#eq2) down below:
 
 **<a name="eq2">Equation 2: Yield collection equation:</a>**
 $$ Y_p = S_p (A_g - A_p) $$
 
-Where, $S_p$ is the shares of the `staked position`, $A_g$ is the current value of the global accumulator of a desired asset (`ether` or `ALCA`), and $A_p$ is the last value of $A_g$ at the time of the last yield collection for a position (`accumulatorEth` and `accumulatorToken` defined in the [**table 1**](#table1)).
+Where, $S_p$ is the shares of the `staked position`, $A_g$ is the current value of the global accumulator of the desired asset (`ether` or `ALCA`), and $A_p$ is the last value of $A_g$ at the time of the last yield collection for a position (`accumulatorEth` and `accumulatorToken` defined in [**table 1**](#table1)).
 
 **During stake position minting, the value of both accumulators will be set to the latest value of the global accumulators ($A_g = A_p$) which will result in $Y_p = 0$ right after the minting**. Therefore, a position will only have yields if a deposit is made after its minting.
 
-Different from the ALCA shares stored inside the `staked position`, the profits (`ALCA` or `ether`) will liquidity. Therefore, the users will be receiving the assets in the chosen wallets when collecting the profits.
+Different from the ALCA shares stored inside the `staked position`, the profits (`ALCA` or `ether`) will be liquidity. Therefore, the users will receive the assets in the chosen wallets when collecting the profits.
 
-From the point of view of the `PublicStaking` contract the yield distribution will be passive. In other words, the users will need to call the `PublicStaking` contract in order to collect their profits to a desired wallet address. Passive distribution of yields diminish a lot the security risks.
+From the point of view of the `PublicStaking` contract, the yield distribution will be passive. In other words, the users will need to call the `PublicStaking` contract in order to collect their profits to the desired wallet address. Passive distribution of yields diminishes a lot the security risks.
+
+> **Users don't need to collect profits right after a distribution has occurred. The collect can occur at any moment, even after multiple distributions, and due to accumulators logic specified in equation [1](#eq1) and [2](#eq2), the value sent to the user will be same as if it has collect right after each distribution.**
 
 ## Logic
 <!--- APIs / Pseudocode / Flowcharts / Conditions / Limitations -->
@@ -97,7 +99,7 @@ Users with staked position will be able to burn their staked positions by provid
 
 ### Yield deposit for distribution [**Only External contracts**]
 
-External contracts like `ALCB` and `ValidatorPool` will be allowed to deposit `ether` and `ALCA` to be distributed to the stake holders via the `depositToken` and `depositEth` methods.
+External contracts like `ALCB` and `ValidatorPool` will be allowed to deposit `ether` and `ALCA` to be distributed to the stakeholders via the `depositToken` and `depositEth` methods.
 
 ### Estimating the profits
 
@@ -105,7 +107,7 @@ Users will be able to predict their profits without having to call the collect m
 
 ### Collecting profits
 
-In the `PublicStaking` contract, users will be able to collect their yields by providing the position's `tokenID` to the `collectAllProfits(uint256 tokenID_)` and `collectAllProfitsTo(uint256 tokenID_)` to collect both `ALCA` and `ether` profits to their address or to another address (`collectAllProfitsTo`). The `PublicStaking` also have methods to collect each individual assert type to user's address or to another address.
+In the `PublicStaking` contract, users will be able to collect their yields by providing the position's `tokenID` to the `collectAllProfits(uint256 tokenID_)` and `collectAllProfitsTo(uint256 tokenID_)` to collect both `ALCA` and `ether` profits to their address or to another address (`collectAllProfitsTo`). The `PublicStaking` also has methods to collect each individual assert type to user's address or to another address.
 
 ### Locking Staked Positions
 
@@ -116,12 +118,12 @@ Users will be able to lock their position against burn or collection profits. Th
 
 Consider the following scenario:
 
-- `20_000_000 ALCA` staked in the `PublicStaking` contract between `5 distinct users` with positions with different amount of shares.
+- `20_000_000 ALCA` staked in the `PublicStaking` contract between `5 distinct users` with positions with different amounts of shares.
 - Distribution/Deposit 1 occurs with `1_000_000 ALCA` and `100 ether` from slash events and ALCB selling.
 
 Using equations [1](#eq1) and [2](#eq2), we expect the following results:
 
-<a name="table2">**Table 2: Expected profit of ether and ALCA for first distribution**</a>
+<a name="table2">**Table 2: Expected profit of ether and ALCA after the first distribution**</a>
 
 | Owner | tokenID | shares   | % from total staked | profit ether | profit ALCA |
 | ----- | ------- | -------- | ------------------- | ------------ | ----------- |
@@ -133,10 +135,10 @@ Using equations [1](#eq1) and [2](#eq2), we expect the following results:
 
 Now, let's assume that `user1` burns the position with `tokenID=1`. Now the scenario is:
 
-- `10_000_000 ALCA` staked in the `PublicStaking` contract between `4 distinct users` with positions with different amount of shares.
+- `10_000_000 ALCA` staked in the `PublicStaking` contract between `4 distinct users` with positions with different amounts of shares.
 - Distribution/Deposit 2 occurs with `2_000_000 ALCA` and `200 ether` from slash events and ALCB selling.
 
-<a name="table3">**Table 3: Expected profit of ether and ALCA for second distribution**</a>
+<a name="table3">**Table 3: Expected profit of ether and ALCA after the second distribution**</a>
 
 | Owner | tokenID | shares  | % from total staked | profit ether | profit ALCA |
 | ----- | ------- | ------- | ------------------- | ------------ | ----------- |
