@@ -303,6 +303,50 @@ For a transaction to be valid, it must
 Before a transaction is processed,
 all of its TxIn values must have valid signatures.
 
+## Merkle Trees
+
+We now discuss
+[Merkle trees](https://en.wikipedia.org/wiki/Merkle_tree)
+before we talk about transaction hashing.
+Our discussion is based on the
+[OpenZeppelin Merkle tree library](https://github.com/OpenZeppelin/merkle-tree).
+
+Given $k$ leaves wth $k>0$ with data
+$[D_{0}, D_{1}, \dots , D_{k-1}]$,
+we can compute the Merkle Tree root hash using
+the following functions:
+
+```
+def LeafHash(data):
+    return Hash(Hash(data))
+
+def HairPair(a, b):
+    if int(a) < int(b):
+        return Hash(a || b)
+    else:
+        return Hash(b || a)
+
+def ComputeRootHash(Data):
+    n = len(Data)
+    Leaves = make(array, n)
+    for (k = 0; k < n; k++):
+        Leaves[k] = LeafHash(Data[k])
+    Tree = make(array, 2*n - 1)
+    for (k = 0; k < n; k++):
+        Tree[2*n - 2 - k] = Leaves[k]
+    for (k = n-1; k >= 0; k--):
+        childL = Tree[2k+1]
+        childR = Tree[2k+2]
+        Tree[k] = HashPair(childL, childR)
+    return Tree[0]
+```
+
+This works for data of any length;
+in particular, the length of the data is not required
+to be a power-of-two.
+Double-hashing the leaf nodes provides additional protection
+by making a distinction between leaf nodes and interior nodes.
+
 ## Transaction Hashing
 
 Every transaction is referred to by its transaction hash (txhash).
