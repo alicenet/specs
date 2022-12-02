@@ -12,12 +12,24 @@ We present the formal specification of the transaction object.
 
 Note: all references to the hash function `Hash`
 will refer to `Keccak256` unless specified otherwise;
-it has a 32 byte (256 bit) hash digest.
+it has a 32 byte (256 bit) digest.
 
 ## Introduction
 
 The transaction is central to AliceNet:
 it fully specifies a state transition.
+A transaction consumes unspent transaction outputs (UTXOs)
+and makes new UTXOs;
+these will be defined more precisely below.
+It is expected that multiple independent transactions
+will be combined to specify the state transition
+during each block of AliceNet.
+
+We begin by discussing the transaction object
+and the associated subobjects.
+From there, we look at a particular Merkle Tree
+which will be used as we develop our transaction hash
+(a way to compactly identify a transaction).
 
 ## Objects
 
@@ -354,6 +366,10 @@ the consumed inputs and created outputs.
 Before discussing the precise method of computing transaction hashes,
 we first discuss how to identify TxIns and UTXOs.
 
+Broadly speaking, the transaction version and metadata
+information will specify how the remaining information
+(TxIns and UTXOs) will be hashed.
+
 ### `utxoID`s
 
 We now focus on uniquely identifying transaction inputs and outputs;
@@ -449,9 +465,9 @@ it is thought to be **impractical**.
 The same comment applies to two different transactions
 producing the same `TxHash`.
 
-## Versions
+## Transaction Versions
 
-We list all version information here.
+We list all valid transaction version information here.
 
 ### Version 0
 
