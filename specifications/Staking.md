@@ -67,14 +67,18 @@ Each staked NFT position will be identified via a unique identifier called `toke
 Users that choose to stake their `ALCA` (stakeholders) will be gaining yield in the form of `ether` and `ALCA`. The `PublicStaking` contract will be receiving `ether` that will be coming from the direct sell of the ALCB token in the ALCB contract (**NOT FROM ALCB SOLD IN EXTERNAL AMM POOLS!**) and will also be receiving `ALCA` coming from the eventual `slash` of bad validators. The received assets will be stored in a global accumulator per asset (ALCA or `ether`) that can be modeled by [**equation 1**](#eq1) and will be distributed to the stakeholders.
 
 **<a name="eq1">Equation 1: Accumulator logic:</a>**
-$$ A_g = \sum_{i=1}^{\infty} {D_i \over T_i} $$
+```math
+A_g = \sum_{i=1}^{\infty} {D_i \over T_i}
+```
 
 The global accumulator $A_g$ of an asset (`ALCA` or `ether`) will keep track of the summation of all the deposit of that assets $D_i$ divided by total ALCA shares staked in the contract at the moment of the deposit $T_i$.
 
 By using the accumulators defined by [**equation 1**](#eq1) we can compute the yields/profits ($Y_p$) of a position with [**equation 2**](#eq2) down below:
 
 **<a name="eq2">Equation 2: Yield collection equation:</a>**
-$$ Y_p = S_p (A_g - A_p) $$
+```math
+Y_p = S_p (A_g - A_p)
+```
 
 Where, $S_p$ is the shares of the `staked position`, $A_g$ is the current value of the global accumulator of the desired asset (`ether` or `ALCA`), and $A_p$ is the last value of $A_g$ at the time of the last yield collection for a position (`accumulatorEth` and `accumulatorToken` defined in [**table 1**](#table1)).
 
