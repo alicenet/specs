@@ -23,7 +23,7 @@ and makes new UTXOs;
 these will be defined more precisely below.
 It is expected that multiple independent transactions
 will be combined to specify the state transition
-during each block of AliceNet.
+during each block on AliceNet.
 
 We begin by discussing the transaction object
 and the associated subobjects.
@@ -33,9 +33,9 @@ which will be used as we develop our transaction hash
 
 ## Objects
 
-In order to talk about transactions, we need to talk about utxos:
+In order to talk about transactions, we need to talk about UTXOs:
 unspent transaction outputs.
-These utxos may be consumed in order to make additional utxos.
+These UTXOs may be consumed in order to make additional UTXOs.
 
 ### DataStore
 
@@ -50,15 +50,15 @@ and a per-epoch fee.
 
 ```
 DataStore {
-    DSLinker  (DSLinker)
+    DSLinker
     Signature (DataStoreSignature)
 }
 ```
 
 ```
 DSLinker {
-    DSPreImage (DSPreImage)
-    Txhash     (32 byte array)
+    DSPreImage
+    TxHash     (32 byte array)
 }
 ```
 
@@ -99,7 +99,7 @@ DataStoreSignature {
  *  DSLinker
     - DSPreImage:
       specifies the DSPreImage
-    - Txhash:
+    - TxHash:
       specifies the transaction hash
  *  DSPreImage
     - ChainID:
@@ -109,7 +109,7 @@ DataStoreSignature {
       specifies the epoch in which the DataStore was issued;
       **must** be nonzero
     - Index:
-      specifies the index where the data is store
+      specifies the index where the data is stored
     - RawData:
       specifies the raw data to be stored;
       **must** be nonzero length byte array (upper bound **TBD**)
@@ -144,7 +144,7 @@ The ValueStore object stores value (in terms of ALCB, the utility token).
 
 ```
 ValueStore {
-    VSPreImage (VSPreImage)
+    VSPreImage
     TxHash     (32 byte array)
 }
 ```
@@ -217,8 +217,8 @@ and is denoted as `TxOut`.
 ```
 TxOut {
     union {
-        DataStore  (DataStore)
-        ValueStore (ValueStore)
+        DataStore
+        ValueStore
     }
 }
 ```
@@ -232,23 +232,23 @@ they are denoted as `TxIn`.
 
 ```
 TxIn {
-    TxInLinker (TxInLinker)
+    TxInLinker
     Signature  (byte array)
 }
 ```
 
 ```
 TxInLinker {
-    TxInPreImage (TxInPreImage)
+    TxInPreImage
     TxHash       (32 byte array)
 }
 ```
 
 ```
 TxInPreImage {
-    ChainID          (uint32)
-    ConsumedTxOutIdx (uint32)
-    ConsumedTxHash   (32 byte array)
+    ChainID        (uint32)
+    ConsumedTxIdx  (uint32)
+    ConsumedTxHash (32 byte array)
 }
 ```
 
@@ -274,14 +274,22 @@ TxInPreImage {
 ### Tx
 
 The transaction object is central to AliceNet.
+The primary components of a transaction are
+the list of consumed UTXOs (specified as a list of TxIn objects)
+and the list of new UTXOs (specified as a list of TxOut objects).
+It also contains the version number and metadata information
+necessary for transaction validation.
+A Fee object is included for completeness and is required
+for validation;
+it is used implicitly in the TxHash computation.
 
 ```
 Tx {
     Version  (uint32)
     Metadata (byte array)
     Fee      (uint256)
-    Vin      (list of TxIn)
-    Vout     (list of TxOut)
+    Vin      (list of TxIns)
+    Vout     (list of TxOuts)
 }
 ```
 
@@ -302,15 +310,16 @@ Tx {
 ## Transaction Validation
 
 For a transaction to be valid, it must
- *  have at least one TxIn
+ *  have valid version number
+ *  have valid metadata corresponding to specified version number
+ *  have at least one TXIN
  *  have at least one UTXO
- *  have a valid fee
  *  have valid transaction indices on all new UTXOs
- *  have valid datastore indices
+ *  have valid DataStore indices
  *  have valid inputs (unique)
  *  have matching input and output values
  *  have valid fees
- *  have valid txhash
+ *  have valid TxHash
 
 Before a transaction is processed,
 all of its TxIn values must have valid signatures.
@@ -349,6 +358,12 @@ def ComputeRootHash(Data):
         childR = Tree[2k+2]
         Tree[k] = HashPair(childL, childR)
     return Tree[0]
+
+def VerifyMerkleProof(data, proof, root):
+    tmp = LeafHash(data)
+    for (k = 0; k < len(proof); k++):
+        tmp = HashPair(tmp, proof[k])
+    return tmp == root
 ```
 
 This works for data of any length;
@@ -359,26 +374,26 @@ by making a distinction between leaf nodes and interior nodes.
 
 ## Transaction Hashing
 
-Every transaction is referred to by its transaction hash (txhash).
+Every transaction is referred to by its transaction hash (TxHash).
 This value is meant to uniquely specify a transaction
 and should be determined deterministically from
 the consumed inputs and created outputs.
 Before discussing the precise method of computing transaction hashes,
-we first discuss how to identify TxIns and UTXOs.
+we first discuss how to identify TXINs and UTXOs.
 
 Broadly speaking, the transaction version and metadata
 information will specify how the remaining information
-(TxIns and UTXOs) will be hashed.
+(TXINs and UTXOs) will be hashed.
 
 ### `utxoID`s
 
 We now focus on uniquely identifying transaction inputs and outputs;
-that is, we must identify the TxIns and UTXOs.
+that is, we must identify the TXINs and UTXOs.
 To do this, we specify a `utxoID` for each object.
 
 #### `utxoID`s for TxIns
 
-We specify the `utxoID` for TxIns as
+We specify the `utxoID` for TXINs as
 
 ```
 utxoID = Hash(ConsumedTxHash, ConsumedTxIdx)
@@ -400,7 +415,7 @@ Also, the `utxo` must first be serialized in a deterministic manner.
 ### `TxHash`es
 
 The transaction hash `TxHash` will uniquely identify a transaction.
-It does this using its Version number, Metadata, TxIns,
+It does this using its Version number, Metadata, TXINs,
 and UTXOs.
 
 We use the following algorithm:
@@ -459,7 +474,7 @@ this is called a
 We note that the work required to find a generic hash collision
 for a 256 bit hash function is approximately $2^{128}$;
 this is believed to be impractical.
-That is, while it is technically **possible** for two different
+That is, while it is **technically possible** for two different
 consumed UTXOs to produce the same `utxoID`,
 it is thought to be **impractical**.
 The same comment applies to two different transactions
@@ -470,6 +485,5 @@ producing the same `TxHash`.
 We list all valid transaction version information here.
 
 ### Version 0
-
  *  Version Number: 0
  *  Metadata: **must** be empty
