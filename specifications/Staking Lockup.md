@@ -13,11 +13,11 @@ created: 2022-11-14
 
 ### Summary
 
-This specification proposes a series of mechanisms to incentivize the illiquidity of ALCA token at the beginning of the AliceNet lifetime. The main component of this mechanism will be a Lockup smart contract that will allow users to lock up their public staking positions in exchange for gaining extra rewards. The lockup smart contract will be assisted by a router smart contract to provide to the end users and to the frontend an easier way of migrating, staking, and locking positions in just one Ethereum transaction.
+This specification proposes a series of mechanisms to incentivize the illiquidity of ALCA token at the beginning of the AliceNet lifetime. The main component of this mechanism will be a Lockup smart contract that will allow users to lock up their public staking positions in exchange for gaining extra rewards.
 
 ### Context
 
-Once we release the Alicenet economics system, users will be able to get ALCA by migrating the old token (MadToken) directly into the ALCA smart contract. In addition to this, we also foresee the creation of AMM pools with ALCA in the popular markets (UNISWAP V3, Balancer, etc), where users will be able to buy ALCA directly using different currencies.
+Once we release the Alicenet economics system, users will be able to get ALCA by migrating the old token (MadToken) directly into the ALCA smart contract. In addition to this, we also foresee the creation of AMM pools with ALCA in popular markets (UNISWAP V3, Balancer, etc), where users will be able to buy ALCA directly using different currencies.
 
 With ALCA tokens in hands, users will be able to stake into the Public Staking contract, and in the near future, they will be able participate in the governance system to decide the future of the protocol.
 
@@ -43,11 +43,54 @@ The ALCA and Public Staking contracts are deployed and available and a generous 
 ### Overview
 <!--- Describe the solution in detail -->
 
-To incentivize users to hold their ALCA tokens, a bonus ALCA reward is proposed to users that choose to lock their ALCA staking position in a lockup contract. In other words, a Lockup smart contract will be created and users will be able to transfer their staked positions to it and by doing so, after a certain period has been passed (locking period), they will receive extra rewards. The received reward will be proportional to the amount of ALCA that the user locked compared with the total amount of ALCA locked in the lockup contract.
+To incentivize users to hold their ALCA tokens, a bonus ALCA reward is proposed to users that choose to lock their ALCA staking position in a Lockup contract for a certain `locking period`. The Lockup contract will work as custodial wallet during the `locking period`. Users will be able to collect profits and exit at any moment. However, only users that stay until the end of the `locking period` will be receiving rewards. The received reward will be proportional to the amount of ALCA that the user locked compared with the total amount of ALCA locked in the lockup contract.
 
-The bonus reward will be provided by the AliceNet foundation and should be a generous amount to be able to attract users to lock their positions. The bonus amount will be staked in a public staking position to generate additional rewards coming from the redistribution of yield in the ALCB contract. At the end of the locking period, the position will be burned and only users that stayed until the end will receive the bonus reward.
+The bonus reward will be provided by the AliceNet foundation and should be a generous amount to be able to attract users to lock their positions. The bonus amount $S_b$ will be staked in a public staking position to generate additional rewards coming from the redistribution of yield in the ALCB contract. At the end of the locking period, the position will be burned and only users that stayed until the end will receive the bonus reward. We can define the total bonus amount of `ALCA` ( $B_{alca}$ ) and `ether` ( $B_{eth}$ ) to be distributed as such:
 
-During the locking period, the user will be able to collect profits, coming from the ALCB selling, for the locked position normally. However, the lockup system will hold a certain **reserved** percentage of the collected profit. The reserved amount will be distributed when the user unlocks his position at the end of locking period.
+<a name="eq1"></a>
+$$ B_{alca} = S_b + Y_{alca} \tag{1}$$
+
+and
+
+$$ B_{eth} = Y_{eth} \tag{2}$$
+
+Where $S_b$ is the total amount of `ALCA` staked by the AliceNet foundation and $Y_{eth}$ and $Y_{alca}$ are the profits in `ether` and `ALCA` that occurred during the locking period.
+
+During the locking period, the user will be able to collect profits, coming from the ALCB selling, for the locked position normally. However, the lockup system will hold a certain **reserved** percentage of the collected profit. The reserved amount will be stored in an auxiliary contract called `RewardPool` and it will be distributed when the user unlocks his position at the end of locking period. Using the staking accumulator and user profit equations defined in the [staking specs](https://github.com/alicenet/specs/pull/31), we can derive that the held profit in `ALCA` ( $H_{alca}$ ) and in `ether` ( $H_{eth}$ ) of a locked position will be:
+
+<a name="eq2"></a>
+
+$$ H_{alca} = rY_{alca}  \tag{3}$$
+
+and
+
+$$ H_{eth} = rY_{eth}  \tag{4}$$
+
+Where $r$ is the reserved percentage ( $r \in \mathopen[0,1\mathclose]$ ) that will be held by the `rewardPool` contract and $Y_{eth}$ and $Y_{alca}$ are the profits coming from staked position defined in the [staking specs](https://github.com/alicenet/specs/pull/31).
+
+Similarly, we can define that liquidy profit in `ALCA` ( $L_{alca}$ ) and `ether` ( $L_{eth}$ ) that a user would receive by collecting profits from a locked position  during the locking period will be:
+
+<a name="eq3"></a>
+
+$$ L_{alca} = (1 - r )Y_{alca} \tag{5}$$
+
+and
+
+$$ L_{eth} = (1 - r )Y_{eth} \tag{6}$$
+
+The [accumulator logic](https://github.com/alicenet/specs/pull/31) of the staking system makes it possible that $H$ and $L$ will be the same if the user collects multiple times during the `locking period` or just once.
+
+Assuming that we have $N$ positions locked in Lockup system, the total reserved amount $R$ stored in the `rewardPool` can be definied by the equation below:
+
+<a name="eq3"></a>
+
+$$ R_{alca} = \sum_{u=1}^{N} H{alca}_u $$
+
+At the end of the locking period a user would be receiving:
+
+$$ Rwd_{eth} = {S_p\over S_{T}} (R_{eth} + B_{eth}) $$
+
+
 
 The system will only allow an address per locked position to facilitate the smart contract implementation. The system will also allow users to unlock their positions (partially or fully) before the locking period has finished. Users will able to decide which will be the amount to unlock earlier. In case the user chooses to unlock the total amount, he will not get back the held percentage of profits and he will not receive any bonus amount. In case of partial exit, i.e, when the exit amount is less than the ALCA amount in the locked position, the owner will be loosing only the profits and the bonus relative to the exiting amount. Therefore, users exiting earlier will be penalized by losing the held percentage of profits and any bonus that they would receive. The corresponding amount of held profit and bonus that were owed to the users exiting earlier will be redistributed to the users that stayed locked until the end of the locking period. This protects the system against massive exists and further incentive the users that hold their ALCA in the lockup system by giving them extra rewards.
 
@@ -158,8 +201,7 @@ $accumulatedReservedEther$ is the accumulated sum of ether that is held by the l
 
 In the above example, if all users stayed until the end, user1 would be receiving 1 ether and 1.01 million ALCA extra if he hadn't locked.
 
-#### Presentation
-<!--- UI / UX / Wireframes / Mockups / Design -->
+
 
 #### Testing
 <!--- Testing Requirements -->
@@ -182,7 +224,7 @@ Other alternative solutions were considered, like implementing the reward/lock d
 #### Timeline
 <!--- Estimated timeline to complete / list any milestones -->
 
-Mid November 2022.
+Mid December 2022.
 
 #### Prioritization
 <!--- How this fits into the roadmap -->
@@ -192,7 +234,7 @@ High priority and it needs to be done before the full launch of the project.
 #### Dependencies
 <!--- Dependencies on other specs -->
 
-No dependencies.
+Depends on https://github.com/alicenet/specs/pull/31.
 
 #### Open Questions
 <!--- Open questions that need to be answered -->
