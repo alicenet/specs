@@ -5,7 +5,7 @@ discussion: https://github.com/alicenet/specs/discussions/
 team: Backend
 category: Development
 status: Draft
-related: [Accusations manager](https://github.com/alicenet/alicenet/pull/37) , [Multiple Proposal Accusation](https://github.com/alicenet/alicenet/pull/239) , [Invalid utxo consumption](https://github.com/alicenet/alicenet/pull/255), [Accusation manager can be enabled/disabled in configuration file](https://github.com/alicenet/alicenet/pull/324)
+related: [Accusations manager](https://github.com/alicenet/alicenet/pull/37), [Multiple Proposal Accusation](https://github.com/alicenet/alicenet/pull/239)
 created: 2022-12-01
 ---
 
