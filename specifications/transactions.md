@@ -271,6 +271,14 @@ TxInPreImage {
     - ConsumedTxHash:
       specifies the TxHash of the UTXO being consumed
 
+### Deposit
+
+A Deposit is a special type of TxIn:
+it specifies value which has been transferred to AliceNet.
+Deposits may only be consumed.
+The method for specifying a Deposit's `utxoID` is
+**to be determined**.
+
 ### Tx
 
 The transaction object is central to AliceNet.
