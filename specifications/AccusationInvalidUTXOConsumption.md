@@ -55,7 +55,7 @@ A successful invalid UTXO accusation requires cryptographic proofs to be submitt
   - Proof of inclusion in TXRoot: proof of inclusion of the transaction that included the invalid input in the txRoot trie.
   - Proof of inclusion in TXHash: proof of inclusion of the invalid input (txIn) in the txHash trie (transaction tested against the TxRoot).
 
-This data alone is enough to verify the accusation proof integrity by the smart contracts.
+This data alone is enough for the smart contracts to verify the accusation proof data integrity.
 
 #### Logic
 <!--- APIs / Pseudocode / Flowcharts / Conditions / Limitations -->
@@ -63,6 +63,9 @@ This data alone is enough to verify the accusation proof integrity by the smart 
 Conditions:
 - This detection logic is active when the accusation system is active
 
+Smart contracts:
+
+The smart contract implementation to validate accusation proofs and evict validators is already in place [here](https://github.com/alicenet/alicenet/pull/37/files#diff-cfd0be5e9ca0938babbbde8460a189be71fd805ba34e0dc53a92b584192164e5).
 
 #### Presentation
 
@@ -70,7 +73,7 @@ N/A
 
 #### Testing
 
-
+Reproducing this scenario on a live network is proving challenging because transactions referencing invalid UTXOs are rejected early in the RPC and peer-to-peer layers when data is checked for integrity. Because of this, the detection algorithm doesn't get to see this transaction, and hence is not able to accuse the malicious validator.
 
 #### Security / Risks
 
