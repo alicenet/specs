@@ -417,6 +417,11 @@ Also, the `utxo` must first be serialized in a deterministic manner.
 The transaction hash `TxHash` will uniquely identify a transaction.
 It does this using its Version number, Metadata, TXINs,
 and UTXOs.
+The Version and Metadata information is processed first
+and form one subtree;
+after this, the Version and Metadata are then used
+to process the TXINs and UTXOs.
+The Version specifies valid Metadata, TXIN, and UTXO values.
 
 We use the following algorithm:
 
@@ -425,11 +430,24 @@ def ComputeTxHash(version, metadata, txins, utxos)
     v  = LeafHash(00000000||version)
     md = LeafHash(00000001||metadata)
     tmp1 = HashPair(v, md)
-    vinHash  = ComputeVinHash(txins)
-    voutHash = ComputeVoutHash(utxos)
-    tmp2 = HashPair(vinHash, voutHash)
+    tmp2 = ComputeVinVoutHash(version, metadata, txins, utxos)
     txhash = HashPair(tmp1, tmp2)
     return txhash
+
+def ComputeVinVoutHash(version, metadata, txins, utxos)
+    if version == 0:
+        if len(metadata) > 0:
+            return "Error: invalid metadata"
+        if len(txins) == 0:
+            return "Error: invalid txins"
+        if len(utxos) == 0:
+            return "Error: invalid utxos"
+        vinHash  = ComputeVinHash(txins)
+        voutHash = ComputeVoutHash(utxos)
+        tmp = HashPair(vinHash, voutHash)
+        return tmp
+    else:
+        return "Error: invalid version"
 
 def ComputeVinHash(txins)
     Leaves = []
