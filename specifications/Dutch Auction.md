@@ -18,12 +18,15 @@ The price curve should take into account the need for new validator in both the 
 #### Context
 AliceNet validator nodes communicate with each other in a secure way through the use of a distributed key.
 The operation through which this distributed key is generated is called ETHDKG (Ethereum Distribute Key Generation) ceremony.
+
 When a new validator is admitted to join AliceNet, two ETHDKG ceremonies must be executed:
 * One to destroy the current distributed key (all current validators)
 * One to generate a new distributed key (all current validators plus the new one)
+
 Since this operation involves interacting with multiple Ethereum Smart Contract functions it is a costly operation estimated in approx 2.5M gas units for each validator.
 To encourage current validators incur in this expense whenever a new validator wants to join the network, an amount to be paid by the new validator will be required.
 This amount will be determined by an auction among the postulants, the one that wins pays the price and is allowed to join the network, the minimum price for this auction must cover at least the expenses of all current validators.
+
 Regular auction systems need to maintain the auction open for a fixed period of time, adding complexity and creating sometimes unnecessary waits. There is a simpler and faster auction system called Dutch Auction where the bidding initial price decreases automatically with time following a parameterized curve until a bid is placed, at this point the bidder wins and the auction is closed.
 
 #### Goals
@@ -42,6 +45,7 @@ Some constants are calculated using a fix gas price of 100 gweis. In the future 
 A Smart Contract (DutchAuction.sol) will allow the following operations:
 * Start an auction as a privileged user.
 * Get auction current bid price as any user
+
 The current bid price will be calculated based of a parameterized curve. 
 
 #### Data
@@ -64,6 +68,7 @@ This function will be called when a position for a new validator is open, and wi
 This function will be called when a bidder wants to know the current bid price, the price will be calculated as following: 
 * Calculate the number of blocks between current block and auction's start block (time elapsed since start).
 * With this number of blocks the price will be determined using the following function:
+
 ```solidity
     function _dutchAuctionPrice(uint256 blocks) internal view returns (uint256 result) {
         uint256 _alfa = _START_PRICE - _finalPrice;
@@ -77,43 +82,43 @@ This function will be called when a bidder wants to know the current bid price, 
 
 #### Testing
 These are the expected price values for the first 5 blocks of the started auction:
-  "10000950400000000000000"
-  "9984975974440894568690"
-  "9969052503987240829346"
-  "9953179745222929936305"
-  "9937357456279809220985"
+1. "10000950400000000000000"
+2. "9984975974440894568690"
+3. "9969052503987240829346"
+4. "9953179745222929936305"
+5. "9937357456279809220985"
 
 These are the expected price values for the first 30 days of the started auction:
-  "10000950400000000000000",
-  "979815755677368833202",
-  "515574573898723754631",
-  "350024172018989109187",
-  "265062852313543207268",
-  "213364214103653355989",
-  "178592343328122779593",
-  "153603643912565636829",
-  "134778520501017021732",
-  "120086922710378347469",
-  "108302103907256333190",
-  "98639049777291552707",
-  "90572072550003584486",
-  "83735895636050592675",
-  "77868804528394757890",
-  "72778374030451019821",
-  "68319961200625101040",
-  "64382740879801106093",
-  "60880368151095345381",
-  "57744572752464452823",
-  "54920664796028491258",
-  "52364317966854463955",
-  "50039225725391652597",
-  "47915366064385259757",
-  "45967698124077341302",
-  "44175170267934312878",
-  "42519956112644213186",
-  "40986859649684588043",
-  "39562847348753898891",
-  "38236676706527897891",
+1. "10000950400000000000000",
+2. "979815755677368833202",
+3. "515574573898723754631",
+4. "350024172018989109187",
+5. "265062852313543207268",
+6. "213364214103653355989",
+7. "178592343328122779593",
+8. "153603643912565636829",
+9. "134778520501017021732",
+10. "120086922710378347469",
+11. "108302103907256333190",
+12. "98639049777291552707",
+13. "90572072550003584486",
+14. "83735895636050592675",
+15. "77868804528394757890",
+16. "72778374030451019821",
+17. "68319961200625101040",
+18. "64382740879801106093",
+19. "60880368151095345381",
+20. "57744572752464452823",
+21. "54920664796028491258",
+22. "52364317966854463955",
+23. "50039225725391652597",
+24. "47915366064385259757",
+25. "45967698124077341302",
+26. "44175170267934312878",
+27. "42519956112644213186",
+28. "40986859649684588043",
+29. "39562847348753898891",
+30. "38236676706527897891",
 
 The solution should pass the following tests:
 ✓ Should obtain correct bid price at first auction block
@@ -127,7 +132,7 @@ N/A
 
 #### Security / Risks
 
-Since this Contract does not modify state  
+Since in this Contract public users don't modify state no important risks are detected
 
 ## Further Considerations
 
