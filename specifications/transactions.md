@@ -276,8 +276,14 @@ TxInPreImage {
 A Deposit is a special type of TxIn:
 it specifies value which has been transferred to AliceNet.
 Deposits may only be consumed.
-The method for specifying a Deposit's `utxoID` is
-**to be determined**.
+It is important to note that a
+**deposit's validity must come from outside of AliceNet**;
+this is a necessary part of the system.
+
+Each deposit type will be contained within their own separate
+subtrees of the `StateTrie`;
+the location is specified by `key` (32 byte value)
+and `number` (`uint256` value starting at 1).
 
 ### Tx
 
@@ -420,6 +426,21 @@ utxoID  = Hash(prehash, utxo.TxOutIdx)
 In this case, `TxOutIdx` is serialized as a big endian integer.
 Also, the `utxo` must first be serialized in a deterministic manner.
 
+#### `utxoID`s for Deposits
+
+Deposits are a special type of TxIn which must be defined separately.
+We specify the `utxoID` for Deposits as
+
+```
+utxoID = Hash(key, number)
+```
+
+Here, `key` is the location of Deposit subtree within `StateTrie`
+and `number` is a `uint256` value denoting which deposit
+for that subtree;
+`number` starts counting at 1.
+
+
 ### `TxHash`es
 
 The transaction hash `TxHash` will uniquely identify a transaction.
@@ -486,6 +507,10 @@ def makeUTXOID(value)
         prehash  = Hash(encode(value))
         txOutIdx = value.TxOutIdx
         return Hash(prehash||txOutIdx)
+    else if IsValidDeposit(value):
+        key    = value.DepositKey
+        number = value.DepositNumber
+        return Hash(key||number)
     else:
         return "Error: Invalid object"
 ```
