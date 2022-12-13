@@ -67,13 +67,63 @@ Smart contracts:
 
 The smart contract implementation to validate accusation proofs and evict validators is already in place [here](https://github.com/alicenet/alicenet/pull/37/files#diff-cfd0be5e9ca0938babbbde8460a189be71fd805ba34e0dc53a92b584192164e5).
 
+##### Smart contract:
+
+The [AccusationInvalidTxConsumption](https://github.com/alicenet/alicenet/pull/37/files#diff-cfd0be5e9ca0938babbbde8460a189be71fd805ba34e0dc53a92b584192164e5R19) contract is responsible for receiving and processing the accusation proof data, validating the proofs and evicting the malicious validator from the validator pool.
+
+###### API
+```solidity
+
+contract AccusationInvalidTxConsumption {
+
+  /// @notice This function validates an accusation of non-existent utxo consumption, as well as invalid deposit consumption.
+  /// @param pClaims_ the PClaims of the accusation
+  /// @param pClaimsSig_ the signature of PClaims
+  /// @param bClaims_ the BClaims of the accusation
+  /// @param bClaimsSigGroup_ the signature group of BClaims
+  /// @param txInPreImage_ the TXInPreImage consuming the invalid transaction
+  /// @param proofs_ an array of merkle proof structs in the following order:
+  ///   proof against StateRoot: Proof of inclusion or exclusion of the deposit or UTXO in the stateTrie
+  ///   proof of inclusion in TXRoot: Proof of inclusion of the transaction that included the invalid input in the txRoot trie.
+  ///   proof of inclusion in TXHash: Proof of inclusion of the invalid input (txIn) in the txHash trie (transaction tested against the TxRoot).
+  /// @return the address of the signer
+  function accuseInvalidTransactionConsumption(
+        bytes memory pClaims_,
+        bytes memory pClaimsSig_,
+        bytes memory bClaims_,
+        bytes memory bClaimsSigGroup_,
+        bytes memory txInPreImage_,
+        bytes[3] memory proofs_
+  )
+  public
+  returns (address)
+
+  /// @notice This function tells whether an accusation ID has already been submitted or not.
+  /// @param id_ The deterministic accusation ID
+  /// @return true if the ID has already been submitted, false otherwise
+  function isAccused(bytes32 id_) public view returns (bool)
+}
+```
+
+###### Smart contract algorithm to successfully validate accusation proofs
+1. Ensure previous block is signed by correct group key for current validator set
+2. Ensure there are transactions by checking `PClaims.BClaims.TxCount`
+3. Ensure height delta is 1
+4. Ensure the chain ID is correct for `PClaims.BClaims.ChainID`
+5. Recover the malicious signer address using `ecrecover` signature verification of `PClaims`, and ensure the signer is an active validator
+6. Ensure ProofInclusionTxRoot against PClaims.BClaims.TxRoot is valid
+7. Ensure ProofOfInclusionTxHash against the target hash from ProofInclusionTxRoot is valid
+8. Ensure the transaction UTXO ID does not exist
+7. Evict the malicious signer from the validator pool
+
+
 #### Presentation
 
 N/A
 
 #### Testing
 
-Reproducing this scenario on a live network is proving challenging because transactions referencing invalid UTXOs are rejected early in the RPC and peer-to-peer layers when data is checked for integrity. Because of this, the detection algorithm doesn't get to see this transaction, and hence is not able to accuse the malicious validator.
+Reproducing this scenario on a live network is proving challenging because transactions referencing invalid UTXOs are rejected early in the RPC and peer-to-peer layers when data is checked for integrity. Because of this, the detection algorithm doesn't get to see this transaction and is therefore not able to accuse the malicious validator.
 
 #### Security / Risks
 
