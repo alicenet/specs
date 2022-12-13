@@ -50,7 +50,7 @@ A successful multiple proposal accusation requires cryptographic proofs to be su
 - Conflicting proposal PClaims data
 - The proposer address
 
-This data alone is enough to verify the accusation proof integrity by the smart contracts.
+This data alone is enough for the smart contracts to verify the accusation proof data integrity.
 
 #### Logic
 <!--- APIs / Pseudocode / Flowcharts / Conditions / Limitations -->
@@ -67,9 +67,50 @@ To detect multiple proposal scenarios, several conditions must be met by the alg
 2. The proposals are different
 3. The proposals have different PClaims data
 4. The proposer is an actual validator
-5. The proposer is the supposed validator to propose at the current height and round
-6. The RClaims on both proposals are the same; RClaims are found in Proposal.PClaims.RCert hierarchy
+5. The proposer is the deterministically supposed validator to propose at the current height and round
+6. The RClaims on both proposals are the same. RClaims are found in Proposal.PClaims.RCert hierarchy
 7. The signatures of each proposal must be different, yet valid
+
+##### Smart contract:
+
+The [AccusationMultipleProposal](https://github.com/alicenet/alicenet/pull/37/files#diff-c61b5edf4da5e02009378cd2307b91d4c37d46cdcddb04d04d67a019faf5e84d) contract is responsible for receiving and processing the accusation proof data, validating the proofs and evicting the malicious validator from the validator pool.
+Through
+
+###### API
+```solidity
+
+contract AccusationMultipleProposal {
+
+  /// @notice This function validates an accusation of multiple proposals.
+  /// @param signature0_ The signature of pclaims0
+  /// @param pClaims0_ The PClaims of the accusation
+  /// @param signature1_ The signature of pclaims1
+  /// @param pClaims1_ The PClaims of the accusation
+  /// @return the address of the signer, aka malicious validator
+  function accuseMultipleProposal(
+          bytes calldata signature0_,
+          bytes calldata pClaims0_,
+          bytes calldata signature1_,
+          bytes calldata pClaims1_
+  )
+  public
+  returns (address)
+
+  /// @notice This function tells whether an accusation ID has already been submitted or not.
+  /// @param id_ The deterministic accusation ID
+  /// @return true if the ID has already been submitted, false otherwise
+  function isAccused(bytes32 id_) public view returns (bool)
+}
+```
+
+###### Smart contract algorithm to successfully validate accusation proofs
+1. Recover the malicious signer address using `ecrecover` signature verification of both PClaims, and ensure addresses match
+2. Ensure hashes of both PClaims are different
+3. Ensure the heights are equal on both PClaims, using the respective fields `PClaims.RCert.RClaims.Height`
+4. Ensure the rounds are equal on both PClaims, using the respective fields `PClaims.RCert.RClaims.Round`
+5. Ensure the chain IDs are equal on both PClaims, using the respective fields `PClaims.RCert.RClaims.ChainID`
+6. Generate deterministic accusation ID and ensure it hasn't been submitted before
+7. Evict the malicious signer from the validator pool
 
 #### Presentation
 
@@ -77,7 +118,7 @@ N/A
 
 #### Testing
 
-To reproduce the conditions for this accusation algorithm, a validator can clone/duplicate it's node software and data, and have them both running in parallel. The next step is to create transactions on one of these nodes, through RPC, which will make the RPC receiving node to propose blocks that contain the transactions while the other node software will not, hence resulting in a multiple proposal from this same validator.
+To reproduce the conditions for this accusation algorithm, a validator can clone/duplicate it's node software and data files, and have them both running in parallel. The next step is to create transactions on one of these nodes, through RPC, which will make the RPC receiving node to propose blocks that contain the transactions while the other clone node will not, hence resulting in a multiple proposal from this same validator.
 
 #### Security / Risks
 
@@ -103,4 +144,4 @@ Accusation System [spec](https://github.com/alicenet/specs/issues/6) and [PR](ht
 
 #### Open Questions
 
-- Under this accusation, should a validator be `minor` or `major` slashed?
+1. Under this accusation, should a validator be `minor` or `major` slashed?
