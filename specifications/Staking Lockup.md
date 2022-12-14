@@ -1,6 +1,6 @@
 ---
 title: Staking lockup to incentivize illiquidity
-author: @vtleonardo, @z-j-lin, @nelsonhp
+author: @vtleonardo, @nelsonhp
 discussion: https://github.com/alicenet/alicenet/pull/340
 team: Backend
 category: Development
@@ -13,7 +13,7 @@ created: 2022-11-14
 
 ### Summary
 
-This specification proposes a series of mechanisms to incentivize the illiquidity of ALCA token at the beginning of the AliceNet lifetime. The main component of this mechanism will be a Lockup smart contract that will allow users to lock up their public staking positions in exchange for gaining extra rewards.
+This specification proposes a series of mechanisms to incentivize the illiquidity of ALCA token at the beginning of the AliceNet lifetime. The main component of this mechanism will be a Lockup smart contract that will allow users to lock their public staking positions in exchange for gaining extra rewards.
 
 ### Context
 
@@ -45,61 +45,72 @@ The ALCA and Public Staking contracts are deployed and available and a generous 
 
 To incentivize users to hold their ALCA tokens, a bonus ALCA reward is proposed to users that choose to lock their ALCA staking position in a Lockup contract for a certain `locking period`. The Lockup contract will work as custodial wallet during the `locking period`. Users will be able to collect profits and exit at any moment. However, only users that stay until the end of the `locking period` will be receiving rewards. The received reward will be proportional to the amount of ALCA that the user locked compared with the total amount of ALCA locked in the lockup contract.
 
-The bonus reward will be provided by the AliceNet foundation and should be a generous amount to be able to attract users to lock their positions. The bonus amount $S_b$ will be staked in a public staking position to generate additional rewards coming from the redistribution of yield in the ALCB contract. At the end of the locking period, the position will be burned and only users that stayed until the end will receive the bonus reward. We can define the total bonus amount of `ALCA` ( $B_{alca}$ ) and `ether` ( $B_{eth}$ ) to be distributed as such:
+The bonus reward will be provided by the AliceNet foundation and should be a generous amount to be able to attract users to lock their positions. Right now, the bonus amount will be **900000+ ALCA**. The bonus amount $S(b)$ will be staked in a public staking position to generate additional rewards coming from the redistribution of yield in the ALCB contract and the minting of ALCA. At the end of the locking period, the position will be burned and only users that stayed until the end will receive the bonus reward. We can define the total bonus amount of `ALCA` ( $B_{alca}$ ) and `ether` ( $B_{eth}$ ) to be distributed as such:
 
-<a name="eq1"></a>
-$$ B_{alca} = S_b + Y_{alca} \tag{1}$$
+$$ B_{alca} = S(b) + Y(b)_{alca} \tag{1}$$
 
 and
 
-$$ B_{eth} = Y_{eth} \tag{2}$$
+$$ B_{eth} = Y(b)_{eth} \tag{2}$$
 
 Where $S_b$ is the total amount of `ALCA` staked by the AliceNet foundation and $Y_{eth}$ and $Y_{alca}$ are the profits in `ether` and `ALCA` that occurred during the locking period.
 
-During the locking period, the user will be able to collect profits, coming from the ALCB selling, for the locked position normally. However, the lockup system will hold a certain **reserved** percentage of the collected profit. The reserved amount will be stored in an auxiliary contract called `RewardPool` and it will be distributed when the user unlocks his position at the end of locking period. Using the staking accumulator and user profit equations defined in the [staking specs](https://github.com/alicenet/specs/pull/31), we can derive that the held profit in `ALCA` ( $H_{alca}$ ) and in `ether` ( $H_{eth}$ ) of a locked position will be:
+During the locking period, the user will be able to collect profits, coming from the ALCB selling and ALCA minting for the locked position normally. However, the lockup system will hold a certain **reserved** percentage of the collected profit. The **reserved percentage will be 20%**. The reserved amount will be stored in an auxiliary contract called `RewardPool` and it will be distributed when the user unlocks his position at the end of locking period.
 
-<a name="eq2"></a>
+Using the staking accumulator and user profit equations defined in the [staking specs](https://github.com/alicenet/specs/pull/31), we can derive that the held profit in `ALCA` ( $H_{alca}$ ) and in `ether` ( $H_{eth}$ ) of a locked position will be:
 
-$$ H_{alca} = rY_{alca}  \tag{3}$$
-
-and
-
-$$ H_{eth} = rY_{eth}  \tag{4}$$
-
-Where $r$ is the reserved percentage ( $r \in \mathopen[0,1\mathclose]$ ) that will be held by the `rewardPool` contract and $Y_{eth}$ and $Y_{alca}$ are the profits coming from staked position defined in the [staking specs](https://github.com/alicenet/specs/pull/31).
-
-Similarly, we can define that liquidy profit in `ALCA` ( $L_{alca}$ ) and `ether` ( $L_{eth}$ ) that a user would receive by collecting profits from a locked position  during the locking period will be:
-
-<a name="eq3"></a>
-
-$$ L_{alca} = (1 - r )Y_{alca} \tag{5}$$
+$$ H(u)_{alca} = 0.2Y(u)_{alca}  \tag{3}$$
 
 and
 
-$$ L_{eth} = (1 - r )Y_{eth} \tag{6}$$
+$$ H(u)_{eth} = 0.2Y(u)_{eth}  \tag{4}$$
+
+Similarly, we can define that liquid profit in `ALCA` ( $L_{alca}$ ) and `ether` ( $L_{eth}$ ) that a user would receive by collecting profits from a locked position during the locking period will be:
+
+$$ L(u)_{alca} = 0.8Y_{alca} \tag{5}$$
+
+and
+
+$$ L(u)_{eth} = 0.8Y_{eth} \tag{6}$$
 
 The [accumulator logic](https://github.com/alicenet/specs/pull/31) of the staking system makes it possible that $H$ and $L$ will be the same if the user collects multiple times during the `locking period` or just once.
 
-Assuming that we have $N$ positions locked in Lockup system, the total reserved amount $R$ stored in the `rewardPool` can be definied by the equation below:
+The system will only allow an address per locked position to facilitate the smart contract implementation and all the positions will be tracked inside the smart contract in an indexed data struct.
 
-<a name="eq3"></a>
+Assuming that we have $N$ positions locked in Lockup system, the total reserved amount $H$ stored in the `RewardPool` can be defined by the summation of the held profit of all positions locked in the system:
 
-$$ R_{alca} = \sum_{u=1}^{N} H{alca}_u $$
+$$ H_{alca} = \sum_{u=1}^{N} H(u)_{alca} \tag{7}$$
 
-At the end of the locking period a user would be receiving:
+and
 
-$$ Rwd_{eth} = {S_p\over S_{T}} (R_{eth} + B_{eth}) $$
+$$ H_{eth} = \sum_{u=1}^{N} H(u)_{eth} \tag{8}$$
 
+In order to ensure that $(7)$ and $(8)$ hold true and that each user receives the correct held amount $H(u)$ owed to them, we have to make sure that the profit is collected for all locked positions. This will be enforced at the end of the `locking period`. Once the `locking period` is over, a special method called `aggregateProfits()` in the `Lockup` contract needs to be called. This method will iterate over all locked positions collecting the profits. Differently from the normal collect that can happen during the `locking period`, the collection of profits of the `aggregateProfits()` will not send the liquidy profit $G(u)$ to users. This value will be stored in the `Lockup` contract and will be sent together with the final bonus and held amount. With this, we can allow anyone to call `aggregateProfits()` after the `locking period` is over. Probably, it will be necessary more than one call to collect profits for all positions due to the gas limits imposed by ethereum.
 
+At the end of the `locking period` and after `aggregateProfits` has been completed, the final outcome $R(u)$ received by a user when unlocking will be:
 
-The system will only allow an address per locked position to facilitate the smart contract implementation. The system will also allow users to unlock their positions (partially or fully) before the locking period has finished. Users will able to decide which will be the amount to unlock earlier. In case the user chooses to unlock the total amount, he will not get back the held percentage of profits and he will not receive any bonus amount. In case of partial exit, i.e, when the exit amount is less than the ALCA amount in the locked position, the owner will be loosing only the profits and the bonus relative to the exiting amount. Therefore, users exiting earlier will be penalized by losing the held percentage of profits and any bonus that they would receive. The corresponding amount of held profit and bonus that were owed to the users exiting earlier will be redistributed to the users that stayed locked until the end of the locking period. This protects the system against massive exists and further incentive the users that hold their ALCA in the lockup system by giving them extra rewards.
+$$ R(u)_{alca} = {S(u)\over S_{T}} (H_{alca} + B_{alca}) + S(u) + G(u)_{alca} \tag{9}$$
+
+and
+
+$$ R(u)_{eth} = {S(u)\over S_{T}} (H_{eth} + B_{eth} ) + G(u)_{eth} \tag{10}$$
+
+Where, $S_T$ is total number of shares (ALCA) locked into the contract and $G(u)$ is the liquid profit for a user stored in the `Lockup` contract during the `aggregateProfits()` execution.
+
+The system will also allow users to unlock their positions (partially or fully) before the locking period has finished. Users will able to decide which will be the amount to unlock earlier. In case the user chooses to unlock the total amount, he will not get back any held percentage of profits $H(u)$ previously stored and he will not receive any bonus amount. During the `early unlock`, a collect of profits will be done and the reserved amount $H(u)$ will be deducted from the yield before delivering the `staked position` back to the user.
+
+In case of partial exit, i.e, when the exit amount is less than the ALCA amount in the locked position, the owner will be loosing only the profits and the bonus relative to the exiting amount. This will change $S(u)$ and also $S_T$ changing the final outcome received by the users.
+
+Therefore, users exiting earlier will be penalized by losing the held percentage of profits and any bonus that they would receive. The corresponding amount of held profit and bonus that were owed to the users exiting earlier will be redistributed to the users that stayed locked until the end of the locking period following equation $(9)$ and $(10)$. I.e, users exiting early will decrease the value of $S_T$, increasing the profits of the users locked. This protects the system against massive exists and further incentive the users that hold their ALCA in the lockup system by giving them extra rewards.
+
+During the `unlock early` or the final `unlock`, users will be able to decide if they want to receive the `ALCA` amount as plain token on their wallets or as a new `staked position` in the `Public Staking` contract.
 
 ### Logic
 <!--- APIs / Pseudocode / Flowcharts / Conditions / Limitations -->
 
 The lockup system will be composed of 3 smart contracts:
 
-| contract   | definition                                                                                                                                |
+| Contract   | Definition                                                                                                                                |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
 | Lockup     | Main contract which users will interact to lock, unlock and collect profits                                                               |
 | RewardPool | Auxiliary vault contract to store the percentage amount from the locked positions profits (ether and ALCA)                                |
@@ -107,101 +118,30 @@ The lockup system will be composed of 3 smart contracts:
 
 The system will work in 4 phases, defined by the time passed in ethereum blocks:
 
-| State           |
-| --------------- |
-| PreLock         |
-| InLock          |
-| PostLock-Unsafe |
-| PostLock-Safe   |
+| State           | Definition                                                   |
+| --------------- | ------------------------------------------------------------ |
+| PreLock         | Enrollment period where users will be able to lock positions |
+| InLock          | Locking period                                               |
+| PostLock-Unsafe | Post-Lock period where we need to run `aggregateProfits()`   |
+| PostLock-Safe   | Post-Lock period where users can `unlock` without penalties  |
 
 **PreLock**
 
-The Prelock phase, also called enrollment period, **it is the only phase where the users will be allowed to lock staked positions**. After locking, users can unlock early and collect profits (certain percentage of the profits will be held in the rewards contract). This phase will start right after the lockup contract is deployed and will finish once we reach the ethereum block number that is equal to the value defined at deployment time in the variable: `_startBlock`.
+The Prelock phase, also called enrollment period, **it is the only phase where the users will be allowed to lock staked positions**. After locking, users can unlock early and collect profits (certain percentage of the profits will be held in the rewards contract). This phase will start right after the lockup contract is deployed and will finish once we reach the ethereum block number that is equal to the value defined at deployment time in the variable: `_startBlock`. The PreLock phase will last approximately 3 months.
 
 **InLock**
 
-The Inlock phase, also called locked period, is the actual locking period. During this phase, users can unlock early and collect profits (certain percentage of the profits will be held in the rewards contract). This phase will start once we reach the ethereum block number that is equal to the value defined at deployment time in the variable: `_startBlock` and will finish once we reach the ethereum block number defined in the variable `_endBlock`.
+The Inlock phase, also called locked period, is the actual locking period. During this phase, users can unlock early and collect profits (certain percentage of the profits will be held in the rewards contract). This phase will start once we reach the ethereum block number that is equal to the value defined at deployment time in the variable: `_startBlock` and will finish once we reach the ethereum block number defined in the variable `_endBlock`. The InLock phase will last approximately 12 months.
 
 **PostLock-Unsafe**
 
-The AliceNet team needs to call a special type of collect function in the lockup contract called `aggregateProfits`. This function will collect all profits for all locked positions. This function different from the normal collect will not send the profits back to the address calling it, but instead, it will store the amount that would go to users in the lockup and the reserved amount (percentage that should be held) in the reward contract. After `aggregateProfits` has finished collecting profits for all positions locked, the bonus position stored in the bonusPool contract will be burned and the assets will be sent to the rewardPool contract.
+During the PostLock-Unsafe phase users will not be able to collect profits nor unlock earlier. During this phase, the AliceNet team will need to call a special type of collect function in the lockup contract called `aggregateProfits`. This function will collect all profits for all locked positions. This function different from the normal collect will not send the profits back to the address calling it, but instead, it will store the amount that would go to users in the lockup and the reserved amount (percentage that should be held) in the reward contract. After `aggregateProfits` has finished collecting profits for all positions locked, the bonus position stored in the bonusPool contract will be burned and the assets will be sent to the rewardPool contract.
 
 **PostLock-Safe**
 
+In the PostLock-Safe phase, users will be able to `unlock()` their positions without any penalty and will gain the final reward described by equations (9) and (10). Users will be able to decide if they want the `ALCA` tokens to be sent directly to their desired wallet or to be re-staked in a new `staking position` in the Public Staking contract.
 
-
-The full logic was already implemented in here: https://github.com/alicenet/alicenet/pull/340
-
-
-### Data
-<!-- Data Models / Schemas Requirements -->
-
-A series of examples were crafted to show the benefits of locking positions.
-
-**The following examples will analyze 5 distinct users with positions with different amount of ALCA staked (shares).**
-
-**The example scenarios will be considering that:**
-
-- 100 million ALCA is staked in total in the Public Staking Contract.
-- 1 million ALCA and 100 ether is distributed from slash events and ALCB selling during the locking period.
-- 2 million ALCA is given by the AliceNet foundation to be distributed to users that lock their positions (bonus amount).
-- 20% of the profits of locked positions are reserved (held) by the lockup system and only given back to the users after the end of the locking period.
-
-> :warning: **The values above are fictitious to ease the reasoning and may change harshly from the real values!**
-
-Before, we dive into the numbers that the users would receive by locking up their public stake positions, let's analyze what they would receive if they never locked their positions:
-
-Table 1: Profit amount of positions not locked.
-
-| Owner | tokenID | shares   | % from total staked | profit ether | profit ALCA |
-| ----- | ------- | -------- | ------------------- | ------------ | ----------- |
-| user1 | 10      | 10000000 | 10%                 | 10           | 100000      |
-| user2 | 20      | 5000000  | 5%                  | 5            | 50000       |
-| user3 | 30      | 2500000  | 3%                  | 2.5          | 25000       |
-| user4 | 40      | 1500000  | 2%                  | 1.5          | 15000       |
-| user5 | 50      | 1000000  | 1%                  | 1            | 10000       |
-
-
-As we can see in the profits columns, the user's profits are directly proportional to the percentage of ALCA that he has from the total staked.
-
-Table 2: Extra profit that the bonus ALCA would receive for being staked.
-| Owner     | tokenID | shares  | % from total staked | profit ether | profit ALCA |
-| --------- | ------- | ------- | ------------------- | ------------ | ----------- |
-| bonusPool | 51      | 2000000 | 2%                  | 2            | 20000       |
-
-**The table above shows what the bonus amount would receive as profit from being staked. This extra profit will be also distributed to users that lock their positions**
-
-**Example 1: All 5 users lock and stay until the end**
-
-If all the 5 users lock their positions and stay until the end to unlock, we should have in the system:
-
-- 20 million ALCA locked at the end of the locking period.
-- 6 ether accumulated from the collects and bonusPosition profit ether.
-- 2.06 million ALCA accumulated from the collect + bonus ALCA + bonus position ALCA profit.
-
-Table 2: All 5 users lock their positions and stay until the end.
-
-| owner | tokenID | final locked shares | % from total locked shares | profit ether | profit ALCA |
-| ----- | ------- | ------------------- | -------------------------- | ------------ | ----------- |
-| user1 | 10      | 10000000            | 50.0%                      | 11           | 1110000     |
-| user2 | 20      | 5000000             | 25.0%                      | 5.5          | 555000      |
-| user3 | 30      | 2500000             | 12.5%                      | 2.75         | 277500      |
-| user4 | 40      | 1500000             | 7.5%                       | 1.65         | 166500      |
-| user5 | 50      | 1000000             | 5.0%                       | 1.1          | 111000      |
-
-The final profit in ether can be computed with:
-
-$$ profitEther = {userLockedPositionShares * (accumulatedReservedEther + bonusEther) \over totalSharesLocked} $$
-
-Where:
-
-$userPositionLockedShares$ is the shares (ALCA) of a locked public staking position.
-$accumulatedReservedEther$ is the accumulated sum of ether that is held by the lockup system from the profit collection.
-
-
-In the above example, if all users stayed until the end, user1 would be receiving 1 ether and 1.01 million ALCA extra if he hadn't locked.
-
-
+The full logic was already implemented in here: https://github.com/alicenet/alicenet/blob/main/bridge/contracts/Lockup.sol
 
 #### Testing
 <!--- Testing Requirements -->
@@ -216,29 +156,22 @@ If not implemented correctly, users may lose ALCA locked up into the system.
 
 ## Further Considerations
 
-#### Alternative Solutions
+### Alternative Solutions
 <!-- Describe alternative solutions or implementations if any exist -->
 
 Other alternative solutions were considered, like implementing the reward/lock directly on the public staking contract, but none of them were viable.
 
-#### Timeline
+### Timeline
 <!--- Estimated timeline to complete / list any milestones -->
 
 Mid December 2022.
 
-#### Prioritization
+### Prioritization
 <!--- How this fits into the roadmap -->
 
 High priority and it needs to be done before the full launch of the project.
 
-#### Dependencies
+### Dependencies
 <!--- Dependencies on other specs -->
 
 Depends on https://github.com/alicenet/specs/pull/31.
-
-#### Open Questions
-<!--- Open questions that need to be answered -->
-
-- How much ALCA will be distributed as bonus?
-- What will be the percentage locked in the reward contract?
-- How long will be the locking period?
