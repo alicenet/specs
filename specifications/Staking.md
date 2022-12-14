@@ -64,7 +64,7 @@ The `shares` field accounts for how much `ALCA` was staked in the contract for t
 
 Each staked NFT position will be identified via a unique identifier called `tokenID_` that is not stored inside the NFT position. The first position will start with the `tokenID=1` and subsequent minted positions will have incremental `tokenIDs`, e.g 2, 3, 4, etc.
 
-Users that choose to stake their `ALCA` (stakeholders) will be gaining yield in the form of `ether` and `ALCA`. The `PublicStaking` contract will be receiving `ether` that will be coming from the direct sell of the ALCB token in the ALCB contract (**NOT FROM ALCB SOLD IN EXTERNAL AMM POOLS!**) and will also be receiving `ALCA` coming from the eventual `slash` of bad validators. The received assets will be stored in a global accumulator per asset (ALCA or `ether`) that can be modeled by [**equation 1**](#eq1) and will be distributed to the stakeholders.
+Users that choose to stake their `ALCA` (stakeholders) will be gaining yield in the form of `ether` and `ALCA`. The `PublicStaking` contract will be receiving `ether` that will be coming from the direct sell of the ALCB token in the ALCB contract (**NOT FROM ALCB SOLD IN EXTERNAL AMM POOLS!**) and will also be receiving `ALCA` coming from the eventual `slash` of bad validators and from the minting of `ALCA`. The received assets will be stored in a global accumulator per asset (ALCA or `ether`) that can be modeled by [**equation 1**](#eq1) and will be distributed to the stakeholders.
 
 **<a name="eq1">Equation 1: Accumulator logic:</a>**
 ```math
@@ -84,7 +84,7 @@ Where, $S_p$ is the shares of the `staked position`, $A_g$ is the current value 
 
 **During stake position minting, the value of both accumulators will be set to the latest value of the global accumulators ( $A_g = A_p$ ) which will result in $Y_p = 0$ right after the minting**. Therefore, a position will only have yields if a deposit is made after its minting.
 
-Different from the ALCA shares stored inside the `staked position`, the profits (`ALCA` or `ether`) will be liquidity. Therefore, the users will receive the assets in the chosen wallets when collecting the profits.
+Different from the ALCA shares stored inside the `staked position`, the profits (`ALCA` or `ether`) will be liquid. Therefore, the users will receive the assets in the chosen wallets when collecting the profits.
 
 From the point of view of the `PublicStaking` contract, the yield distribution will be passive. In other words, the users will need to call the `PublicStaking` contract in order to collect their profits to the desired wallet address. Passive distribution of yields diminishes a lot the security risks.
 
