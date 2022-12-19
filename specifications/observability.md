@@ -1,3 +1,14 @@
+---
+title: Observability
+author: @diligentis
+discussion: https://github.com/alicenet/specs/discussions/12
+team: Backend
+category: Operations
+status: Draft
+related: -
+created: 2022-11-14
+---
+
 # Observability
 
 ## Introduction
