@@ -17,7 +17,7 @@ created: 2022-11-14
 
 Observability is the foundation for being able to operate a production service reliably. Given the nature
 of work that the AliceNet network does, reliability is a paramount concern. Therefore significant work
-should be done to ensure that operators of nodes are able to have visibility into what their nodes are doing
+should be done to ensure that node operators are able to have visibility into what their nodes are doing
 and how to diagnose and correct any issues with them.
 
 Observability generally falls into 3 categories:
@@ -61,7 +61,7 @@ There are a number of supported libraries and platforms in this space compatible
 Currently the project has a somewhat custom logging framework set up. While this is a
 sufficient mechanism for logging and debugging locally, it unfortunately does not work
 well for running a production service. One of the design decisions made early on was to
-support logigng levels per sub-system, controlled via flags to make debugging easier.
+support logging levels per sub-system, controlled via flags to make debugging easier.
 This approach was similar to [slf4j](https://www.slf4j.org). In our cloud based
 environment there is no need to do this, as logs can be searched and filtered with ease.
 As part of this work we should remove log levels and instead rely on the centralized
@@ -73,7 +73,7 @@ into the VMs hosting the nodes and utilizing [journalctl](https://www.freedeskto
 to review them. This mechanism requires too many permissions for most users to safely
 utilize, and we should instead use a centralized location. For now that will be in
 Google Cloud. All node VMs should install a [cloud logging agent](https://cloud.google.com/logging/docs/agent/logging/installation)
-to steam logs to the platform. This way there is one place to look, and as a bonus allows
+to stream logs to the platform. This way there is one place to look, and as a bonus allows
 for log based metrics and alerting to be used.
 
 Google Cloud Operations Suite's Logging supports rich, structured data. The project
@@ -90,28 +90,57 @@ simplify the method signatures we should move to having log entries populated in
 #### Metrics Export
 
 Currently no metrics are exported from an AliceNet node. With metrics being exported to
-[GCP Operations Suite](https://cloud.google.com/products/operations) there will be the
+[GCP Operations Suite](https://cloud.google.com/products/operations) there will be an
 opportunity to monitor the overall state of the system under our control as well as alert
 on liveness indicators.
 
 The following metrics should be exported as part of our code base:
 
+- Compute resources
+  - Uptime
+  - CPU usage %
+  - System load
+  - Memory usage
+  - Disk IO: read and write bits/s
+  - Disk usage
+  - Disk IO wait/latency
+  - open file descriptors
+  - max OS file descriptors
+  - network IO: in and out bits/s
 - Peering
-  - Number of connected peers, by type
+  - Number of connected peers, by type (TBD: what types are there? validator and non-validator?)
   - Number of exchanged messages
+  - Number of dials both pre-brontide handshake and post AliceNet handshake. Allows for the assessement of improper protocol initialization
+- Validators
+  - Number of active validators
+  - Number of validators in the pool. Accounts for validators that already joined the validator pool but aren't active yet because they are waiting for a snapshot to kick off ETHDKG
+  - Current dutch auction price to join as a validator
 - Dynamics
   - The value of each variable in dynamics
 - Blocks
   - Current epoch
+  - Epoch length in blocks
+  - Current height
+  - Latest snapshot height
   - Number of blocks
   - Number of transactions
+  - Number of transactions per block
+  - Time per block
+  - Number of ValueStore transactions
+  - Number of DataStore transactions
+- Transaction pool
+  - Number of pending transactions
+  - Average pending time for all transactions in the transaction pool
+  - Number of processed transactions - these are implicitly valid
+  - Number of invalid transactions
+  - Number of underpriced transactions
+  - Number of replaced transactions (if applicable to AliceNet)
 - Bridge
   - Number of events seen by type
-
-In addition to those metrics, the following metrics should be set up to have alerting:
-
-- Disk usage
-- CPU usage
+- Validator earnings:
+  - Rewards per block
+  - Rewards per epoch
+  - Annual Percentage Rate (APR)
 
 #### Security / Risks
 
