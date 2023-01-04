@@ -13,14 +13,23 @@ created: 2022-12-07
 
 ## Introduction
 
-### Summary   
-Stakers looking to become a validator should be able to bid for joining price in an dutch style auction.
-The price curve should take into account the need for new validator in both the starting price and the rate of change.
+### Summary
+Stakers looking to become validators should be able to bid
+for a position within a
+[Dutch auction](https://en.wikipedia.org/wiki/Dutch_auction)
+(an open-outcry descending price auction).
+The price curve will depend on the current number of validators
+as well as the number of validators to be added.
 
 ### Context
-AliceNet validator nodes communicate with each other in a secure way through the use of a distributed key.
-The operation through which this distributed key is generated is called ETHDKG (Ethereum Distribute Key Generation) ceremony.
 
+AliceNet validators prove agreement by signing blocks under a distributed key.
+The operation through which this distributed key is generated is called
+the ETHDKG (Ethereum Distribute Key Generation) ceremony;
+this key is called the **group public key**.
+
+Because this key is distributed between all validators,
+any change in validators will require a negotiation of a new group public key.
 When a new validator is admitted to join AliceNet, two ETHDKG ceremonies must be executed:
 * One to destroy the current distributed key (all current validators)
 * One to generate a new distributed key (all current validators plus the new one)
