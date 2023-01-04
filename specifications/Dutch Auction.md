@@ -9,13 +9,15 @@ related: https://github.com/alicenet/alicenet/issues/398
 created: 2022-12-07
 ---
 
+# Dutch Auction
+
 ## Introduction
 
-#### Summary   
+### Summary   
 Stakers looking to become a validator should be able to bid for joining price in an dutch style auction.
 The price curve should take into account the need for new validator in both the starting price and the rate of change.
 
-#### Context
+### Context
 AliceNet validator nodes communicate with each other in a secure way through the use of a distributed key.
 The operation through which this distributed key is generated is called ETHDKG (Ethereum Distribute Key Generation) ceremony.
 
@@ -29,27 +31,30 @@ This amount will be determined by an auction among the postulants, the one that 
 
 Regular auction systems need to maintain the auction open for a fixed period of time, adding complexity and creating sometimes unnecessary waits. There is a simpler and faster auction system called Dutch Auction where the bidding initial price decreases automatically with time following a parameterized curve until a bid is placed, at this point the bidder wins and the auction is closed.
 
-#### Goals
+### Goals
 Establish a mechanism to determine the price to become a validator.
 
-#### Non Goals
+### Non-Goals
 The mechanism to become a validator.
 
-#### Assumptions
+### Assumptions
 Values defined at deployment are defined as a guide and can be modified to adapt the price curve to required results.
 
 ## Specification
 
-#### Overview
+### Overview
 The solution consists of a Smart Contract that provides the following functionality:
-##### Start an auction
+
+#### Start an auction
 This operation allows to start an auction by calculating the initial and final prices and registering the current block number as auction's start block, upon execution, an event with all auction details will be emitted.
-##### Get current bidding price
+
+#### Get current bidding price
 This operation calculates the current bidding price using a specific price curve and the number of blocks mined between current block and the registered start block.
-##### Bid for current auction price
+
+#### Bid for current auction price
 This operation emits an event with address of the winner (sender) and auction details
 
-#### Data
+### Data
 These variables will govern the price curve, the values are set at deployment
 | Descriptor | Constructor Value |
 | ----------- | ----------- |
@@ -62,8 +67,9 @@ The cost to add a validator is calculated as follows:
 
 Auction's final price can be obtained multiplying the current number of registered validators by ETHDKG Single Validator Cost.
 
-#### Logic
-##### Start Auction
+### Logic
+
+#### Start Auction
 This function will be called when a position for a new validator is open, and performs the following actions:
 * Defines auction final price multiplying ETHDKG Validator Cost by the number of current validators in network (The bidding price will never be lower than this value)
 * Determines the current auction id by increasing a counter.
@@ -72,27 +78,27 @@ This function will be called when a position for a new validator is open, and pe
 * Upon execution emit an AuctionStarted event with auction id, initial price and final price
 This operation can only be executed by factory
 
-##### Get Bid Price
+#### Get Bid Price
 This function will be called when a bidder wants to know the current bid price, and performs the following actions: 
 * Calculates the number of blocks between current block and auction's start block (time elapsed since start).
 * Determines current auction price using the following function:
 ```solidity
-    function _dutchAuctionPrice(uint256 blocks) internal view returns (uint256 result) {
-        uint256 _alfa = _startPrice - _finalPrice;
-        uint256 t1 = _alfa * _scaleParameter;
-        uint256 t2 = _decay * blocks + _scaleParameter ** 2;
-        uint256 ratio = t1 / t2;
-        return _finalPrice + ratio;
-    }
+function _dutchAuctionPrice(uint256 blocks) internal view returns (uint256 result) {
+    uint256 _alfa = _startPrice - _finalPrice;
+    uint256 t1 = _alfa * _scaleParameter;
+    uint256 t2 = _decay * blocks + _scaleParameter ** 2;
+    uint256 ratio = t1 / t2;
+    return _finalPrice + ratio;
+}
 ```
 This operation is public
 
-##### Bid for Current Price
+#### Bid for Current Price
 This function will be called when a bidder wants to buy for the bidding price, and performs the following actions: 
 * Emits an event with address of the winner (sender) and auction details
 This operation is public
 
-#### Testing
+### Testing
 This is the expected initial bidding price (in ETH):
 "1000000.0000000000000000000"
 
@@ -136,37 +142,39 @@ These are the expected price values for the first 30 days of the started auction
 30. "37.286312134325050093"
 
 The contract should pass the following tests:
-✓ Should obtain correct bid price at first auction block
-✓ Should obtain correct bid prices through five blocks according to dutch auction curve
-✓ Should restart the auction
-✓ Should get correct prices for the first 30 days
 
-#### Presentation
+ - [x] Should obtain correct bid price at first auction block
+ - [x] Should obtain correct bid prices through five blocks
+       according to dutch auction curve
+ - [x] Should restart the auction
+ - [x] Should get correct prices for the first 30 days
+
+### Presentation
 
 N/A
 
-#### Security / Risks
+### Security / Risks
 
 Since in this Contract public users do not modify state, no critical risks are detected
 
 ## Further Considerations
 
-#### Timeline
+### Timeline
 
 Should be released on Q1/2023
 
-#### Prioritization
+### Prioritization
 
 Low / Medium priority.
 
-#### Alternative Solutions
+### Alternative Solutions
 
 N/A
 
-#### Dependencies
+### Dependencies
 
 None
 
-#### Open Questions
+### Open Questions
 
 N/A
