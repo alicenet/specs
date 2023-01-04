@@ -19,7 +19,7 @@ This specification proposes a mechanism to stake the ALCA tokens to aggregate mo
 
 Once we release the Alicenet economics system, users will be able to get ALCA by migrating the old token (MadToken) directly into the ALCA smart contract. In addition to this, we also foresee the creation of AMM pools with ALCA in popular markets (UNISWAP V3, Balancer, etc), where users will be able to buy ALCA directly using different currencies.
 
-However, a token without a purpose doesn't worth much. In order to add a role for ALCA token to incentivize users to buy it, this specification proposes a staking contract.
+However, a token without a purpose isn't worth much. In order to add a role for ALCA token to incentivize users to buy it, this specification proposes a staking contract.
 
 ### Goals
 <!--- What is goal this will accomplish -->
