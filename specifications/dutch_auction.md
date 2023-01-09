@@ -30,21 +30,41 @@ this key is called the **group public key**.
 
 Because this key is distributed between all validators,
 any change in validators will require a negotiation of a new group public key.
-When a new validator is admitted to join AliceNet, two ETHDKG ceremonies must be executed:
-* One to destroy the current distributed key (all current validators)
-* One to generate a new distributed key (all current validators plus the new one)
+Because of this, if a validator chooses to leave
+and it is desireable for the total validator count to remain the same,
+a Dutch auction should be performed to fill the empty position.
+otherwise, two ETHDKG ceremonies would be required:
+ *  One to negotiate key after validator exits
+    (current validators except the one exiting)
+ *  One to generate a another key after another validator joins
+    (current validators plus the newly added)
+
+The significant cost of running the ETHDKG protocol
+(estimated at approximately 2.5M gas per validator)
+necessitates care when executing it;
+this protocol should only be performed when desired.
+Thus, care will be taken whenever there is a change in the validator set
+to ensure that the protocol is performed only when necessary.
 
 Since this operation involves interacting with multiple Ethereum Smart Contract functions it is a costly operation estimated in approx 2.5M gas units for each validator.
 To encourage current validators incur in this expense whenever a new validator wants to join the network, an amount to be paid by the new validator will be required.
 This amount will be determined by an auction among the postulants, the one that wins pays the price and is allowed to join the network, the minimum price for this auction must cover at least the expenses of all current validators.
 
+The decision to use a Dutch auction over the more familiar
+[English auction](https://en.wikipedia.org/wiki/English_auction)
+(an open-outcry ascending price auction)
+comes from the advantage that the Dutch auction is over
+after the first bid;
+thus, it is not necessary to store the bids of potential validators.
+
 Regular auction systems need to maintain the auction open for a fixed period of time, adding complexity and creating sometimes unnecessary waits. There is a simpler and faster auction system called Dutch Auction where the bidding initial price decreases automatically with time following a parameterized curve until a bid is placed, at this point the bidder wins and the auction is closed.
 
 ### Goals
-Establish a mechanism to determine the price to become a validator.
+ *  Establish a mechanism to determine the price to become a validator.
 
 ### Non-Goals
-The mechanism to become a validator.
+ *  The mechanism to become a validator.
+ *  The specifics of the ETHDKG protocol.
 
 ### Assumptions
 Values defined at deployment are defined as a guide and can be modified to adapt the price curve to required results.
