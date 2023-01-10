@@ -31,13 +31,15 @@ Build a low cost multi chain token bridge.
 
 A set of smart contracts deployed on evm compatible chains to transfer tokens between chains. Tokens moved through our bridge will be held and in a bridge pool contract. We will have two different types of pools, a native token and external bridge pool. Native bridge pools are pools that live on the same chain as the token being bridged. When a user deposits a native token into the bridge, they will get and IOU which they can use to withdraw the token on another chain through a external bridge pool. External bridge pools are pools that is deployed on a chain different from the tokens origination chains, and instead of holding tokens, we mint wrapper tokens on exiting chains if a valid IOU is supplied.
 
-![Native and External Pool Illustration](/images/natveExternalPool.png)
-
 #### Transfer Operation Flow
 
 There are currently 2 possible path we could take. The first, the user approving the bridge router to spend the transfer amount, and calls the router contract to initiate the deposit with the required inputs. The router will first burn ALCB fees the user need to pay for the transfer, calls the ERC20 contract to transfer tokens to the bridge pool contracts, then calls the the event emmisions contract to emit an event that notifies the validators to generat an IOU in which the user can use to withdraw the token on another evm chain as a wrapped token. To initiate a withdraw, the user will call the external bride pool contract and burn the token, the bridge pool will call the event emissions contract to notifie the validators to create an IOU for the user to withdraw the token at a specific bridge pool.
 
+![distributed Native Pools](/images/distributed_native_pools.png)
+
 the Second path is, similar to the first but instead of having a distinct pool for each token, all tokens are held in a vault contract. The user will approve the bridge router to spend tokens to deposit, them call the bridge router to initiate the deposit with eth required. The bridge router will transfer tokens into the vault contract, calls alcb with eth to do a virtual mint deposit to the 0 address on alice, and returns a IOU for the user to withdraw the token on a external bridge pool contract.
+
+![distributed Native Pools](/images/vault_pool.png)
 
 ##### Event Emmisions Contract
 
