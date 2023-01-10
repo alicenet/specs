@@ -35,9 +35,9 @@ A set of smart contracts deployed on evm compatible chains to transfer tokens be
 
 #### Transfer Operation Flow
 
-There are currently 2 possible path we could take. The first is the user approving the bridge router to spend the transfer amount, and calls the router contract to initiate the deposit with the required inputs. The router will first burn ALCB fees the user need to pay for the transfer, calls the ERC20 contract to transfer tokens to the bridge pool contracts, then calls the the event emmisions contract to emit an event that notifies the validators to generat an IOU in which the user can use to withdraw the token on another evm chain as a wrapped token. To initiate a withdraw, the user will call the external bride pool contract and burn the token, the bridge pool will call the event emissions contract to notifie the validators to create an IOU for the user to withdraw the token at a specific bridge pool.
+There are currently 2 possible path we could take. The first, the user approving the bridge router to spend the transfer amount, and calls the router contract to initiate the deposit with the required inputs. The router will first burn ALCB fees the user need to pay for the transfer, calls the ERC20 contract to transfer tokens to the bridge pool contracts, then calls the the event emmisions contract to emit an event that notifies the validators to generat an IOU in which the user can use to withdraw the token on another evm chain as a wrapped token. To initiate a withdraw, the user will call the external bride pool contract and burn the token, the bridge pool will call the event emissions contract to notifie the validators to create an IOU for the user to withdraw the token at a specific bridge pool.
 
-the Second path is, similar to the first but instead of having a distinct pool for each token, all tokens are held in a vault contract. The user will approve the bridge router to spend tokens to deposit, them call the bridge router to initiate the deposit with eth required . The bridge router will purchase bridge router will transfer tokens into the vault contract, calls alcb with eth to do a virtual mint deposit to the 0 address on alice, and returns a IOU for the user to withdraw the token on a external bridge pool contract.
+the Second path is, similar to the first but instead of having a distinct pool for each token, all tokens are held in a vault contract. The user will approve the bridge router to spend tokens to deposit, them call the bridge router to initiate the deposit with eth required. The bridge router will transfer tokens into the vault contract, calls alcb with eth to do a virtual mint deposit to the 0 address on alice, and returns a IOU for the user to withdraw the token on a external bridge pool contract.
 
 ##### Event Emmisions Contract
 
@@ -67,7 +67,8 @@ For mitigaiting risks of vulnerabilities, circuit breaker will be implemented th
 
 #### Security / Risks
 
-<!--- Security / Risks Considerations -->
+- Double spending: the hash of the withdraw and deposit data must be tracked if
+- concentrated vulnerability: if we decide to store all native toens in a vault, a vulnerability in the vault would risk more tokens simultaneously
 
 ## Further Considerations
 
