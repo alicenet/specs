@@ -33,7 +33,7 @@ which will be used as we develop our transaction hash
 
 ## Objects
 
-In order to talk about transactions, we need to talk about UTXOs:
+Before discussing transactions, we will first talk about UTXOs:
 unspent transaction outputs.
 These UTXOs may be consumed in order to make additional UTXOs.
 
@@ -46,7 +46,7 @@ the amount of data (in terms of bytes)
 and length of storage (in terms of epochs);
 there is also a minimum size cost
 (for associated storage related to the DataStore)
-and a per-epoch fee.
+and a per-epoch fee which we do not discuss here.
 
 ```
 DataStore {
@@ -384,7 +384,8 @@ This works for data of any length;
 in particular, the length of the data is not required
 to be a power-of-two.
 Double-hashing the leaf nodes provides additional protection
-by making a distinction between leaf nodes and interior nodes.
+by making a distinction between leaf nodes and interior nodes
+within the Merkle Tree.
 
 ## Transaction Hashing
 
@@ -413,7 +414,7 @@ We specify the `utxoID` for TXINs as
 utxoID = Hash(ConsumedTxHash, ConsumedTxIdx)
 ```
 
-In this case, `ConsumedTxIdx` is serialized as a big endian integer.
+In this case, `ConsumedTxIdx` is serialized as a big endian integer (`uint32`).
 
 #### `utxoID`s for UTXOs
 
@@ -423,8 +424,9 @@ We specify the `utxoID` for UTXOs as
 prehash = Hash(encode(utxo))
 utxoID  = Hash(prehash, utxo.TxOutIdx)
 ```
-In this case, `TxOutIdx` is serialized as a big endian integer.
-Also, the `utxo` must first be serialized in a deterministic manner.
+In this case, `TxOutIdx` is serialized as a big endian integer (`uint32`).
+Also, the `utxo` must first be serialized in a deterministic manner
+(not specified here).
 
 #### `utxoID`s for Deposits
 
@@ -436,6 +438,7 @@ utxoID = Hash(key, number)
 ```
 
 Here, `key` is the location of Deposit subtree within `StateTrie`
+(32 byte value)
 and `number` is a `uint256` value denoting which deposit
 for that subtree;
 `number` starts counting at 1.
@@ -530,6 +533,9 @@ consumed UTXOs to produce the same `utxoID`,
 it is thought to be **impractical**.
 The same comment applies to two different transactions
 producing the same `TxHash`.
+In any case, the `StateTrie` makes it impossible for there
+to be two different UTXOs with the same `utxoID`,
+as this would lead to an invalid state transition.
 
 ## Transaction Versions
 
