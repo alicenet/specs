@@ -11,13 +11,15 @@ created: 2022-11-22
 We present the formal specification of the transaction object.
 
 Note: all references to the hash function `Hash`
-will refer to `Keccak256` unless specified otherwise;
+will refer to `Keccak256`;
 it has a 32 byte (256 bit) digest.
+
+**TODO: determine upper bound on size of DataStore**
 
 ## Introduction
 
 The transaction is central to AliceNet:
-it fully specifies a state transition.
+it specifies a state transition.
 A transaction consumes unspent transaction outputs (UTXOs)
 and makes new UTXOs;
 these will be defined more precisely below.
@@ -25,11 +27,10 @@ It is expected that multiple independent transactions
 will be combined to specify the state transition
 during each block on AliceNet.
 
-We begin by discussing the transaction object
-and the associated subobjects.
-From there, we look at a particular Merkle Tree
-which will be used as we develop our transaction hash
-(a way to compactly identify a transaction).
+We begin by discussing the [transaction object and associated subobjects](#objects).
+From there, we look at a particular [Merkle Tree](#merkle-trees)
+which will be used as we develop our [transaction hash](#transaction-hashes)
+(`TxHash`; a way to compactly identify a transaction).
 
 ## Objects
 
@@ -289,8 +290,8 @@ and `number` (`uint256` value starting at 1).
 
 The transaction object is central to AliceNet.
 The primary components of a transaction are
-the list of consumed UTXOs (specified as a list of TxIn objects)
-and the list of new UTXOs (specified as a list of TxOut objects).
+the list of consumed UTXOs (specified as an array of TxIn objects)
+and the list of new UTXOs (specified as an array of TxOut objects).
 It also contains the version number and metadata information
 necessary for transaction validation.
 A Fee object is included for completeness and is required
@@ -302,8 +303,8 @@ Tx {
     Version  (uint32)
     Metadata (byte array)
     Fee      (uint256)
-    Vin      (list of TxIns)
-    Vout     (list of TxOuts)
+    Vin      (TxIn array)
+    Vout     (TxOut array)
 }
 ```
 
@@ -359,11 +360,15 @@ def HairPair(a, b):
     else:
         return Hash(b || a)
 
-def ComputeRootHash(Data):
+def ProcessData(Data):
     n = len(Data)
     Leaves = make(array, n)
     for (k = 0; k < n; k++):
         Leaves[k] = LeafHash(Data[k])
+    return Leaves
+
+def ProcessLeaves(Leaves):
+    n = len(Leaves)
     Tree = make(array, 2*n - 1)
     for (k = 0; k < n; k++):
         Tree[2*n - 2 - k] = Leaves[k]
@@ -372,6 +377,11 @@ def ComputeRootHash(Data):
         childR = Tree[2k+2]
         Tree[k] = HashPair(childL, childR)
     return Tree[0]
+
+def ComputeRootHash(Data):
+    Leaves = ProcessData(Data)
+    root = ProcessLeaves(Leaves)
+    return root
 
 def VerifyMerkleProof(data, proof, root):
     tmp = LeafHash(data)
@@ -387,7 +397,7 @@ Double-hashing the leaf nodes provides additional protection
 by making a distinction between leaf nodes and interior nodes
 within the Merkle Tree.
 
-## Transaction Hashing
+## Transaction Hashes
 
 Every transaction is referred to by its transaction hash (TxHash).
 This value is meant to uniquely specify a transaction
@@ -482,23 +492,23 @@ def ComputeVinVoutHash(version, metadata, txins, utxos)
         return "Error: invalid version"
 
 def ComputeVinHash(txins)
-    Leaves = []
+    data = []
     for (k = 0; k < len(txins); k++)
         txin = txins[k]
         utxoID = makeUTXOID(txin)
-        leaf = LeafHash(00000002||utxoID)
-        Leaves = append(Leaves, leaf)
-    vin = ComputeRootHash(Leaves)
+        d = 00000002||utxoID
+        data = append(data, d)
+    vin = ComputeRootHash(data)
     return vin
 
 def ComputeVoutHash(utxos)
-    Leaves = []
+    data = []
     for (k = 0; k < len(utxos); k++)
         utxo = utxos[k]
         utxoID = makeUTXOID(utxo)
-        leaf = LeafHash(00000002||utxoID)
-        Leaves = append(Leaves, leaf)
-    vout = ComputeRootHash(Leaves)
+        d = 00000002||utxoID
+        data = append(data, d)
+    vout = ComputeRootHash(data)
     return vout
 
 def makeUTXOID(value)
@@ -528,7 +538,7 @@ this is called a
 We note that the work required to find a generic hash collision
 for a 256 bit hash function is approximately $2^{128}$;
 this is believed to be impractical.
-That is, while it is **technically possible** for two different
+That is, while it is **theoretically possible** for two different
 consumed UTXOs to produce the same `utxoID`,
 it is thought to be **impractical**.
 The same comment applies to two different transactions
