@@ -511,6 +511,8 @@ def ComputeVinVoutHash(version, metadata, txins, utxos)
         return "Error: invalid version"
 
 def ComputeVinHash(txins)
+    if len(txins) == 0:
+        return Hash(00000002)
     data = []
     for (k = 0; k < len(txins); k++)
         txin = txins[k]
@@ -521,6 +523,8 @@ def ComputeVinHash(txins)
     return vin
 
 def ComputeVoutHash(utxos)
+    if len(utxos) == 0:
+        return Hash(00000002)
     data = []
     for (k = 0; k < len(utxos); k++)
         utxo = utxos[k]
@@ -545,6 +549,37 @@ def makeUTXOID(value)
         return Hash(key||number)
     else:
         return "Error: Invalid object"
+```
+
+#### Partial Hashing
+
+A Version 1 transaction allows for a partial transaction:
+a portion of TxIn and UTXO elements are specified,
+and the transaction may be completed by another party
+in the future **without any additional communication with the original signer**.
+This is not possible with Version 0 transaction.
+
+```
+def ComputePartialHash(version, metadata, txins, utxos)
+    v  = LeafHash(00000000||version)
+    md = LeafHash(00000001||metadata)
+    tmp1 = HashPair(v, md)
+    tmp2 = ComputeVinVoutHash(version, metadata, txins, utxos)
+    if version == 1:
+        return "Error: invalid version"
+    if len(metadata) != 8:
+        return "Error: invalid metadata; incorrect length"
+    partialTxInLen = uint32(metadata[:4])
+    if partialTxInLen == 0:
+        return "Error: invalid metadata; 0 partial txins"
+    partialUTXOLen = uint32(metadata[4:])
+    if len(txins) == 0:
+        return "Error: invalid txins"
+    pVinHash  = ComputeVinHash(txins[:partialTxInLen])
+    pVoutHash = ComputeVoutHash(utxos[:partialUTXOLen])
+    tmp2 = HashPair(pVinHash, pVoutHash)
+    partialhash = HashPair(tmp1, tmp2)
+    return partialhash
 ```
 
 ### Discussion about `utxoID`s and `TxHash`es
