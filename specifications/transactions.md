@@ -488,6 +488,25 @@ def ComputeVinVoutHash(version, metadata, txins, utxos)
         voutHash = ComputeVoutHash(utxos)
         tmp = HashPair(vinHash, voutHash)
         return tmp
+    if version == 1:
+        if len(metadata) != 8:
+            return "Error: invalid metadata; incorrect length"
+        partialTxInLen = uint32(metadata[:4])
+        if partialTxInLen == 0:
+            return "Error: invalid metadata; 0 partial txins"
+        partialUTXOLen = uint32(metadata[4:])
+        if len(txins) == 0:
+            return "Error: invalid txins"
+        if len(utxos) == 0:
+            return "Error: invalid utxos"
+        pVinHash  = ComputeVinHash(txins[:partialTxInLen])
+        pVoutHash = ComputeVoutHash(utxos[:partialUTXOLen])
+        tmp2 = HashPair(pVinHash, pVoutHash)
+        cVinHash  = ComputeVinHash(txins[partialTxInLen:])
+        cVoutHash = ComputeVoutHash(utxos[partialUTXOLen:])
+        tmp3 = HashPair(cVinHash, cVoutHash)
+        tmp4 = HashPair(tmp2, tmp3)
+        return tmp4
     else:
         return "Error: invalid version"
 
@@ -554,3 +573,9 @@ We list all valid transaction version information here.
 ### Version 0
  *  Version Number: 0
  *  Metadata: **must** be empty
+
+### Version 1
+ *  Version Number: 1
+ *  Metadata: **must** be a byte slice of 8 bytes representing 2 `uint32`
+    values in big-endian form;
+    first `uint32` value **must** be nonzero.
