@@ -23,17 +23,18 @@ as well as the number of validators to be added.
 
 ### Context
 
-AliceNet validators prove agreement by signing blocks under a distributed key.
+AliceNet validators prove consensus by signing blocks under a distributed key.
 The operation through which this distributed key is generated is called
-the ETHDKG (Ethereum Distribute Key Generation) ceremony;
+the ETHDKG (Ethereum Distribute Key Generation) protocol or ceremony;
 this key is called the **group public key**.
 
 Because this key is distributed between all validators,
 any change in validators will require a negotiation of a new group public key.
 Because of this, if a validator chooses to leave
-and it is desireable for the total validator count to remain the same,
-a Dutch auction should be performed to fill the empty position.
-otherwise, two ETHDKG ceremonies would be required:
+and it is desirable for the total validator count to remain the same,
+a Dutch auction should be performed to fill the empty position
+**before** an ETHDKG ceremony occurs.
+Otherwise, two ETHDKG ceremonies would be required:
  *  One to negotiate key after validator exits
     (current validators except the one exiting)
  *  One to generate a another key after another validator joins
@@ -44,11 +45,11 @@ The significant cost of running the ETHDKG protocol
 necessitates care when executing it;
 this protocol should only be performed when desired.
 Thus, care will be taken whenever there is a change in the validator set
-to ensure that the protocol is performed only when necessary.
-
-Since this operation involves interacting with multiple Ethereum Smart Contract functions it is a costly operation estimated in approx 2.5M gas units for each validator.
-To encourage current validators incur in this expense whenever a new validator wants to join the network, an amount to be paid by the new validator will be required.
-This amount will be determined by an auction among the postulants, the one that wins pays the price and is allowed to join the network, the minimum price for this auction must cover at least the expenses of all current validators.
+to ensure that the protocol is performed only when necessary,
+as validators bear the cost of running ETHDKG.
+In this way, there should be a cost associated when adding validators;
+this is done by requiring all potential validators to bid for a position
+via a [Dutch auction](https://en.wikipedia.org/wiki/Dutch_auction).
 
 The decision to use a Dutch auction over the more familiar
 [English auction](https://en.wikipedia.org/wiki/English_auction)
@@ -56,8 +57,6 @@ The decision to use a Dutch auction over the more familiar
 comes from the advantage that the Dutch auction is over
 after the first bid;
 thus, it is not necessary to store the bids of potential validators.
-
-Regular auction systems need to maintain the auction open for a fixed period of time, adding complexity and creating sometimes unnecessary waits. There is a simpler and faster auction system called Dutch Auction where the bidding initial price decreases automatically with time following a parameterized curve until a bid is placed, at this point the bidder wins and the auction is closed.
 
 ### Goals
  *  Establish a mechanism to determine the price to become a validator.
@@ -75,13 +74,18 @@ Values defined at deployment are defined as a guide and can be modified to adapt
 The solution consists of a Smart Contract that provides the following functionality:
 
 #### Start an auction
-This operation allows to start an auction by calculating the initial and final prices and registering the current block number as auction's start block, upon execution, an event with all auction details will be emitted.
+This operation starts an auction by calculating the initial and final prices
+and registering the current block number as the auction's start block;
+upon execution, an event with all auction information will be emitted.
 
 #### Get current bidding price
-This operation calculates the current bidding price using a specific price curve and the number of blocks mined between current block and the registered start block.
+This operation calculates the current bidding price
+as determined by the price curve and the number of blocks
+since the start of the auction.
 
 #### Bid for current auction price
-This operation emits an event with address of the winner (sender) and auction details
+This operation emits an event with address of the winner
+and auction details.
 
 ### Data
 These variables will govern the price curve, the values are set at deployment
