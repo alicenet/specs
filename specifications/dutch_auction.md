@@ -77,33 +77,43 @@ The solution consists of a Smart Contract that provides the following functional
 This operation starts an auction by calculating the initial and final prices
 and registering the current block number as the auction's start block;
 upon execution, an event with all auction information will be emitted.
+The execution of this operation will be triggered only by sidechain (onlyFactory) whenever a position for a new validator is opened. 
 
 #### Get current bidding price
 This operation calculates the current bidding price
 as determined by the price curve and the number of blocks
 since the start of the auction.
+The execution of this operation can be triggered anytime by any address that wants to check current bidding price for auction.
 
 #### Bid for current auction price
 This operation emits an event with address of the winner
 and auction details.
+The execution of this operation can be triggered anytime by any address that agrees to pay the current bidding price to become a validator. 
 
 ### Data
-These variables will govern the price curve, the values are set at deployment
-| Descriptor | Constructor Value |
-| ----------- | ----------- |
-| Start Price  | 1000000 * 10 ** 18 |
-| Decay | 16 |
-| Scale Parameter | 100 |
+These variables govern the price curve, most of them are defined before contract deployment, only the auction's final price is defined at execution time since depends on the gas price of the network and the number of current validators at auction start. 
+
+#### Deployment variables
+The following values are set at deployment to produce the results detailed in [Testing](#testing) section, these values can be modified upon contract redeployment to adapt the price curve to any specific requirements.
+| Descriptor | Description | Initial Constructor Value |
+| ----------- | ----------- |----------- |
+| Start Price  | The initial price for auction in weis | 1000000 * 10 ** 18 |
+| Decay | The decay factor (how fast bidding price decreases through time) | 16 |
+| Scale Parameter | The scale factor (how curve is compressed) |100 |
+
+#### Execution variables
+The following values are calculated at execution time.
+| Descriptor | Description | Calculated Value |
+| ----------- | ----------- |----------- |
+| Final Price  | The final price for auction in weis (bidding price can never be less than this value) | Cost to add a validator * Current Number of Registered Validators|
 
 The cost to add a validator is calculated as follows:
-* ETHDKG Single Validator Cost (Two ETHDKG units operations 1.2M gas units) -> 1200000 * 2 * gasPriceInWeis
-
-Auction's final price can be obtained multiplying the current number of registered validators by ETHDKG Single Validator Cost.
+* ETHDKG Single Validator Cost (Two ETHDKG units operations 1.2M gas units) -> 1200000 * 2 operations (In and Out) * gasPriceInWeis
 
 ### Logic
 
 #### Start Auction
-This function will be called when a position for a new validator is open, and performs the following actions:
+This function will be called when a position for a new validator is open, this happens when a current validator has left the network or when the total number of validators of the network has been increased, and performs the following actions:
 * Defines auction final price multiplying ETHDKG Validator Cost by the number of current validators in network (The bidding price will never be lower than this value)
 * Determines the current auction id by increasing a counter.
 * Defines the auction's start block as the current block number.
@@ -136,43 +146,47 @@ This is the expected initial bidding price (in ETH):
 "1000000.0000000000000000000"
 
 These are the expected price values for the first 5 blocks of the started auction (in ETH):
-1. "10000.009504000009504000"
-2. "9984.035063258795446645"
-3. "9968.111577671460859968"
-4. "9952.238803821665555414"
-5. "9936.416499841026992686"
+| Block | Expected Price |
+| ----------- | ----------- |
+|1|10000.009504000009504000|
+|2|9984.035063258795446645|
+|3|9968.111577671460859968|
+|4|9952.238803821665555414|
+|5|9936.416499841026992686|
 
 These are the expected price values for the first 30 days of the started auction (in ETH):
-1. "10000.009504000009504000"
-2. "978.866285982781712764"
-3. "514.624662988893909592"
-4. "349.074103769906273554"
-5. "264.112703317144606972"
-6. "212.414015972821832455"
-7. "177.642112150073545999"
-8. "152.653388985233679619"
-9. "133.828247682270598608"
-10. "119.136635928723979872"
-11. "107.351805925299422928"
-12. "97.688742611559180995"
-13. "89.621757717408695849"
-14. "82.785574306346927859"
-15. "76.918477622602351368"
-16. "71.828042286708823671"
-17. "67.369625219603283677"
-18. "63.432401156841503597"
-19. "59.930025099477506044"
-20. "56.794226720583805605"
-21. "53.970316080303145780"
-22. "51.413966821574759682"
-23. "49.088872370342160681"
-24. "46.965010690817608264"
-25. "45.017340899444302336"
-26. "43.224811339681163975"
-27. "41.569595611274020919"
-28. "40.036497691258118620"
-29. "38.612484036944839430"
-30. "37.286312134325050093"
+| Day | Expected Price |
+| ----------- | ----------- |
+|1|10000.009504000009504000|
+|2|978.866285982781712764|
+|3|514.624662988893909592|
+|4|349.074103769906273554|
+|5|264.112703317144606972|
+|6|212.414015972821832455|
+|7|177.642112150073545999|
+|8|152.653388985233679619|
+|9|133.828247682270598608|
+|10|119.136635928723979872|
+|11|107.351805925299422928|
+|12|97.688742611559180995|
+|13|89.621757717408695849|
+|14|82.785574306346927859|
+|15|76.918477622602351368|
+|16|71.828042286708823671|
+|17|67.369625219603283677|
+|18|63.432401156841503597|
+|19|59.930025099477506044|
+|20|56.794226720583805605|
+|21|53.970316080303145780|
+|22|51.413966821574759682|
+|23|49.088872370342160681|
+|24|46.965010690817608264|
+|25|45.017340899444302336|
+|26|43.224811339681163975|
+|27|41.569595611274020919|
+|28|40.036497691258118620|
+|29|38.612484036944839430|
+|30|37.286312134325050093|
 
 The contract should pass the following tests:
 
