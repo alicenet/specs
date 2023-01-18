@@ -25,20 +25,21 @@ as well as the number of validators to be added.
 
 AliceNet validators prove consensus by signing blocks under a distributed key.
 The operation through which this distributed key is generated is called
-the ETHDKG (Ethereum Distribute Key Generation) protocol or ceremony;
+the ETHDKG (Ethereum Distributed Key Generation) protocol or ceremony;
 this key is called the **group public key**.
 
 Because this key is distributed between all validators,
-any change in validators will require a negotiation of a new group public key.
+any change in validators will require the negotiation of a new group public key.
 Because of this, if a validator chooses to leave
 and it is desirable for the total validator count to remain the same,
 a Dutch auction should be performed to fill the empty position
 **before** an ETHDKG ceremony occurs.
 Otherwise, two ETHDKG ceremonies would be required:
- *  One to negotiate key after validator exits
-    (current validators except the one exiting)
+
+ *  One to negotiate a key after the validator exits
+    (current validators except the one who left)
  *  One to generate a another key after another validator joins
-    (current validators plus the newly added)
+    (current validators except the one who left plus the newly added)
 
 The significant cost of running the ETHDKG protocol
 (estimated at approximately 2.5M gas per validator)
@@ -66,7 +67,8 @@ thus, it is not necessary to store the bids of potential validators.
  *  The specifics of the ETHDKG protocol.
 
 ### Assumptions
-Values defined at deployment are defined as a guide and can be modified to adapt the price curve to required results.
+Values defined at deployment are a guide
+and can be modified to adapt the price curve to required results.
 
 ## Specification
 
@@ -83,26 +85,37 @@ The execution of this operation will be triggered only by sidechain (onlyFactory
 This operation calculates the current bidding price
 as determined by the price curve and the number of blocks
 since the start of the auction.
-The execution of this operation can be triggered anytime by any address that wants to check current bidding price for auction.
+The execution of this operation may be performed at any time
+to check the current bid price.
 
 #### Bid for current auction price
 This operation emits an event with address of the winner
 and auction details.
-The execution of this operation can be triggered anytime by any address that agrees to pay the current bidding price to become a validator. 
+The execution of this operation can be triggered at any time
+by any address that agrees to pay the current bid price to become a validator. 
 
 ### Data
-These variables govern the price curve, most of them are defined before contract deployment, only the auction's final price is defined at execution time since depends on the gas price of the network and the number of current validators at auction start. 
+These variables govern the price curve,
+and most of them are defined before contract deployment;
+only the auction's final price is defined at execution time
+since depends on the gas price of the network
+and the number of current validators at auction start. 
 
 #### Deployment variables
-The following values are set at deployment to produce the results detailed in [Testing](#testing) section, these values can be modified upon contract redeployment to adapt the price curve to any specific requirements.
+The following values are set at deployment to produce the results detailed
+in the [Testing](#testing) section;
+these values can be modified upon contract redeployment to adapt the price curve
+to specific requirements.
+
 | Descriptor | Description | Initial Constructor Value |
 | ----------- | ----------- |----------- |
-| Start Price  | The initial price for auction in weis | 1000000 * 10 ** 18 |
-| Decay | The decay factor (how fast bidding price decreases through time) | 16 |
-| Scale Parameter | The scale factor (how curve is compressed) |100 |
+| Start Price  | The initial price for auction in Wei | 1000000 * 10 ** 18 |
+| Decay | The decay factor (how fast bidding price decreases with time) | 16 |
+| Scale Parameter | The scale factor (how curve is compressed) | 100 |
 
 #### Execution variables
 The following values are calculated at execution time.
+
 | Descriptor | Description | Calculated Value |
 | ----------- | ----------- |----------- |
 | Final Price  | The final price for auction in weis (bidding price can never be less than this value) | Cost to add a validator * Current Number of Registered Validators|
@@ -114,17 +127,21 @@ The cost to add a validator is calculated as follows:
 
 #### Start Auction
 This function will be called when a position for a new validator is open, this happens when a current validator has left the network or when the total number of validators of the network has been increased, and performs the following actions:
+
 * Defines auction final price multiplying ETHDKG Validator Cost by the number of current validators in network (The bidding price will never be lower than this value)
 * Determines the current auction id by increasing a counter.
 * Defines the auction's start block as the current block number.
 * Defines initial and final price
-* Upon execution emit an AuctionStarted event with auction id, initial price and final price
-This operation can only be executed by factory
+* Upon execution emit an AuctionStarted event with auction id,
+  initial price, and final price
+
+This operation can only be executed by factory.
 
 #### Get Bid Price
 This function will be called when a bidder wants to know the current bid price, and performs the following actions: 
 * Calculates the number of blocks between current block and auction's start block (time elapsed since start).
 * Determines current auction price using the following function:
+
 ```solidity
 function _dutchAuctionPrice(uint256 blocks) internal view returns (uint256 result) {
     uint256 _alfa = _startPrice - _finalPrice;
@@ -134,6 +151,7 @@ function _dutchAuctionPrice(uint256 blocks) internal view returns (uint256 resul
     return _finalPrice + ratio;
 }
 ```
+
 This operation is public
 
 #### Bid for Current Price
