@@ -18,19 +18,20 @@ Stakers looking to become validators should be able to bid
 for a position within a
 [Dutch auction](https://en.wikipedia.org/wiki/Dutch_auction)
 (an open-outcry descending price auction).
-The price curve will depend on the current number of validators
-as well as the number of validators to be added.
+The price decreases based on the current number of validators
+and the number of validators to be added.
 
 ### Context
 
 AliceNet validators prove consensus by signing blocks under a distributed key.
 The operation through which this distributed key is generated is called
 the ETHDKG (Ethereum Distributed Key Generation) protocol or ceremony;
-this key is called the **group public key**.
+resulting (public) key is the **group public key**
+(the group secret key is never formed).
 
 Because this key is distributed between all validators,
 any change in validators will require the negotiation of a new group public key.
-Because of this, if a validator chooses to leave
+Thus, if a validator chooses to leave
 and it is desirable for the total validator count to remain the same,
 a Dutch auction should be performed to fill the empty position
 **before** an ETHDKG ceremony occurs.
@@ -79,7 +80,9 @@ The solution consists of a Smart Contract that provides the following functional
 This operation starts an auction by calculating the initial and final prices
 and registering the current block number as the auction's start block;
 upon execution, an event with all auction information will be emitted.
-The execution of this operation will be triggered only by sidechain (onlyFactory) whenever a position for a new validator is opened. 
+The execution of this operation will be triggered
+only by sidechain (onlyFactory)
+whenever a new validator position is opened. 
 
 #### Get current bidding price
 This operation calculates the current bidding price
@@ -92,7 +95,7 @@ to check the current bid price.
 This operation emits an event with address of the winner
 and auction details.
 The execution of this operation can be triggered at any time
-by any address that agrees to pay the current bid price to become a validator. 
+by any address that pays the current bid price to become a validator. 
 
 ### Data
 These variables govern the price curve,
@@ -118,7 +121,7 @@ The following values are calculated at execution time.
 
 | Descriptor | Description | Calculated Value |
 | ----------- | ----------- |----------- |
-| Final Price  | The final price for auction in weis (bidding price can never be less than this value) | Cost to add a validator * Current Number of Registered Validators|
+| Final Price  | The final price for auction in Wei (bidding price can never be less than this value) | Cost to add a validator * Current Number of Registered Validators|
 
 The cost to add a validator is calculated as follows:
 * ETHDKG Single Validator Cost (Two ETHDKG units operations 1.2M gas units) -> 1200000 * 2 operations (In and Out) * gasPriceInWeis
@@ -126,21 +129,28 @@ The cost to add a validator is calculated as follows:
 ### Logic
 
 #### Start Auction
-This function will be called when a position for a new validator is open, this happens when a current validator has left the network or when the total number of validators of the network has been increased, and performs the following actions:
+This function will be called when a new validator position has opened;
+this may happen when a current validator leaves the network and is replaced
+or when the total number of validators of the network is increased.
+The following actions are performed:
 
-* Defines auction final price multiplying ETHDKG Validator Cost by the number of current validators in network (The bidding price will never be lower than this value)
-* Determines the current auction id by increasing a counter.
-* Defines the auction's start block as the current block number.
-* Defines initial and final price
-* Upon execution emit an AuctionStarted event with auction id,
-  initial price, and final price
+ *  Define auction final price by multiplying ETHDKG Validator Cost
+    by the number of current validators in network
+ *  Determine the current auction id by increasing a counter.
+ *  Define the auction's start block as the current block number.
+ *  Define initial and final price
+ *  Upon execution, emit an AuctionStarted event with auction id,
+    initial price, and final price
 
 This operation can only be executed by factory.
 
 #### Get Bid Price
-This function will be called when a bidder wants to know the current bid price, and performs the following actions: 
-* Calculates the number of blocks between current block and auction's start block (time elapsed since start).
-* Determines current auction price using the following function:
+This function will be called when a bidder wants to know the current bid price.
+The following actions are performed:
+
+ *  Calculate the number of blocks between current block and auction's start block
+    (time elapsed since start).
+ *  Determine current auction price using the following function:
 
 ```solidity
 function _dutchAuctionPrice(uint256 blocks) internal view returns (uint256 result) {
@@ -152,12 +162,17 @@ function _dutchAuctionPrice(uint256 blocks) internal view returns (uint256 resul
 }
 ```
 
-This operation is public
+This operation is public.
 
 #### Bid for Current Price
-This function will be called when a bidder wants to buy for the bidding price, and performs the following actions: 
-* Emits an event with address of the winner (sender) and auction details
-This operation is public
+This function will be called when a bidder wants to bid the current price
+and earn the validator position.
+The following actions are performed:
+
+ *  Bidder includes appropriate ETH amount within transaction.
+ *  Emit an event with address of the winner (sender) and auction details.
+
+This operation is public.
 
 ### Testing
 This is the expected initial bidding price (in ETH):
