@@ -69,7 +69,7 @@ thus, it is not necessary to store the bids of potential validators.
 
 ### Assumptions
 Values defined at deployment are a guide
-and can be modified to adapt the price curve to required results.
+and may be modified in the future.
 
 ## Specification
 
@@ -81,7 +81,7 @@ This operation starts an auction by calculating the initial and final prices
 and registering the current block number as the auction's start block;
 upon execution, an event with all auction information will be emitted.
 The execution of this operation will be triggered
-only by sidechain (onlyFactory)
+only by the sidechain (onlyFactory)
 whenever a new validator position is opened. 
 
 #### Get current bidding price
@@ -107,7 +107,7 @@ and the number of current validators at auction start.
 #### Deployment variables
 The following values are set at deployment to produce the results detailed
 in the [Testing](#testing) section;
-these values can be modified upon contract redeployment to adapt the price curve
+these values may be modified upon contract redeployment to adapt the price curve
 to specific requirements.
 
 | Descriptor | Description | Initial Constructor Value |
@@ -124,7 +124,8 @@ The following values are calculated at execution time.
 | Final Price  | The final price for auction in Wei (bidding price can never be less than this value) | Cost to add a validator * Current Number of Registered Validators|
 
 The cost to add a validator is calculated as follows:
-* ETHDKG Single Validator Cost (Two ETHDKG units operations 1.2M gas units) -> 1200000 * 2 operations (In and Out) * gasPriceInWeis
+ *  ETHDKG Single Validator Cost (Two ETHDKG units operations 1.2M gas units)
+    -> 1200000 * 2 operations (In and Out) * gasPriceInWei
 
 ### Logic
 
