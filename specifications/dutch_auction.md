@@ -258,4 +258,5 @@ None
 
 ### Open Questions
 
-N/A
+Get a better understanding of the appropriate decay rates
+for Dutch auctions.
