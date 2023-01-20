@@ -26,7 +26,7 @@ and the number of validators to be added.
 AliceNet validators prove consensus by signing blocks under a distributed key.
 The operation through which this distributed key is generated is called
 the ETHDKG (Ethereum Distributed Key Generation) protocol or ceremony;
-resulting (public) key is the **group public key**
+the resulting (public) key is the **group public key**
 (the group secret key is never formed).
 
 Because this key is distributed between all validators,
@@ -143,7 +143,7 @@ The following actions are performed:
  *  Upon execution, emit an AuctionStarted event with auction id,
     initial price, and final price
 
-This operation can only be executed by factory.
+This operation can only be performed by factory.
 
 #### Get Bid Price
 This function will be called when a bidder wants to know the current bid price.
