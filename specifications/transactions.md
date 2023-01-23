@@ -2,6 +2,9 @@
 title: Transaction Object Specification
 author: chgorman
 about: Create a transaction object specification
+team: backend and frontend
+discussion: https://github.com/alicenet/specs/discussions/37
+category: Development
 status: Draft
 created: 2022-11-22
 ---
