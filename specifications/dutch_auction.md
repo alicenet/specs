@@ -110,22 +110,24 @@ in the [Testing](#testing) section;
 these values may be modified upon contract redeployment to adapt the price curve
 to specific requirements.
 
-| Descriptor | Description | Initial Constructor Value |
-| ----------- | ----------- |----------- |
-| Start Price  | The initial price for auction in Wei | 1000000 * 10 ** 18 |
+| Descriptor | Description | DEfault Constructor Value for testing|
+| ---------- | ----------- |-------------------------- |
 | Decay | The decay factor (how fast bidding price decreases with time) | 16 |
-| Scale Parameter | The scale factor (how curve is compressed) | 100 |
+| Scale Parameter | The scale factor (how much the curve is compressed) | 10 |
 
 #### Execution variables
 The following values are calculated at execution time.
 
 | Descriptor | Description | Calculated Value |
-| ----------- | ----------- |----------- |
+| ---------- | ----------- | ---------------- |
 | Final Price  | The final price for auction in Wei (bidding price can never be less than this value) | Cost to add a validator * Current Number of Registered Validators|
 
 The cost to add a validator is calculated as follows:
  *  ETHDKG Single Validator Cost (Two ETHDKG units operations 1.2M gas units)
     -> 1200000 * 2 operations (In and Out) * gasPriceInWei
+
+For dutch auction price curve to be functional start price must always be higher than final price so starting of an auction will revert if this condition is no met.
+
 
 ### Logic
 
@@ -133,9 +135,15 @@ The cost to add a validator is calculated as follows:
 This function will be called when a new validator position has opened;
 this may happen when a current validator leaves the network and is replaced
 or when the total number of validators of the network is increased.
+##### Parameters
+| Descriptor | Description | Default test value |
+| ---------- | ----------- |-------------------------- |
+| Start Price  | The initial price for auction in Wei | 1000000 * 10 ** 18 |
+
 The following actions are performed:
 
- *  Define auction final price by multiplying ETHDKG Validator Cost
+ *  Define auction start price with parameter value
+ *  Calculate auction final price by multiplying ETHDKG Validator Cost
     by the number of current validators in network
  *  Determine the current auction id by increasing a counter.
  *  Define the auction's start block as the current block number.
@@ -143,6 +151,10 @@ The following actions are performed:
  *  Upon execution, emit an AuctionStarted event with auction id,
     initial price, and final price
 
+##### Exceptions
+Reverts if calculated final price is higher than specified start price
+
+##### Access Control 
 This operation can only be performed by factory.
 
 #### Get Bid Price
@@ -162,7 +174,7 @@ function _dutchAuctionPrice(uint256 blocks) internal view returns (uint256 resul
     return _finalPrice + ratio;
 }
 ```
-
+##### Access Control 
 This operation is public.
 
 #### Bid for Current Price
@@ -173,9 +185,16 @@ The following actions are performed:
  *  Bidder includes appropriate ETH amount within transaction.
  *  Emit an event with address of the winner (sender) and auction details.
 
+##### Access Control 
 This operation is public.
 
 ### Testing
+
+The following tests use the following parameters:
+* Decay : 16
+* Scale Parameter: 10
+* Start price: 1000000
+
 This is the expected initial bidding price (in ETH):
 "1000000.0000000000000000000"
 
@@ -188,39 +207,42 @@ These are the expected price values for the first 5 blocks of the started auctio
 |4|9952.238803821665555414|
 |5|9936.416499841026992686|
 
-These are the expected price values for the first 30 days of the started auction (in ETH):
+These are the expected price values for the first 28 days of the started auction (in ETH):
 | Day | Expected Price |
 | ----------- | ----------- |
-|1|10000.009504000009504000|
-|2|978.866285982781712764|
-|3|514.624662988893909592|
-|4|349.074103769906273554|
-|5|264.112703317144606972|
-|6|212.414015972821832455|
-|7|177.642112150073545999|
-|8|152.653388985233679619|
-|9|133.828247682270598608|
-|10|119.136635928723979872|
-|11|107.351805925299422928|
-|12|97.688742611559180995|
-|13|89.621757717408695849|
-|14|82.785574306346927859|
-|15|76.918477622602351368|
-|16|71.828042286708823671|
-|17|67.369625219603283677|
-|18|63.432401156841503597|
-|19|59.930025099477506044|
-|20|56.794226720583805605|
-|21|53.970316080303145780|
-|22|51.413966821574759682|
-|23|49.088872370342160681|
-|24|46.965010690817608264|
-|25|45.017340899444302336|
-|26|43.224811339681163975|
-|27|41.569595611274020919|
-|28|40.036497691258118620|
-|29|38.612484036944839430|
-|30|37.286312134325050093|
+| 1 | "109.349230435725124647" |
+| 2 | "55.184001735169721288" |
+| 3 | "37.115869549497432930" |
+| 4 | "28.079353473992515051" |
+| 5 | "22.656659579084400086" |
+| 6 | "19.041203486059378729" |
+| 7 | "16.458574749697777502" |
+| 8 | "14.521515636442539803" |
+| 9 | "13.014862212792632061" |
+| 10 | "11.809506780948247802" |
+| 11 | "10.823285266210324896" |
+| 12 | "10.001419142510985334" |
+| 13 | "9.305983408169056402" |
+| 14 | "8.709887936512857076" |
+| 15 | "8.193266112115732368" |
+| 16 | "7.741217636607760432" |
+| 17 | "7.342347940414342426" |
+| 18 | "6.987794427901481633" |
+| 19 | "6.670560206494055301" |
+| 20 | "6.385047686214940595" |
+| 21 | "6.126725429613631901" |
+| 22 | "5.891885856324163304" |
+| 23 | "5.677466152147864401" |
+| 24 | "5.480913948841288642" |
+| 25 | "5.300085239355930732" |
+| 26 | "5.133165850116431438" |
+| 27 | "4.978610363202353300" |
+| 28 | "4.835094126126684698" |
+| 29 | "4.701475190254196068" |
+
+The following graph represents the price curve in ETH for the first month according to testing parameters
+
+![First month price curve](image.jpg)
 
 The contract should pass the following tests:
 
