@@ -8,7 +8,6 @@ status: Draft
 related: https://github.com/alicenet/alicenet/issues/398
 created: 2022-12-07
 ---
-
 # Dutch Auction
 
 ## Introduction
@@ -31,7 +30,7 @@ the resulting (public) key is the **group public key**
 
 Because this key is distributed between all validators,
 any change in validators will require the negotiation of a new group public key.
-Thus, if a validator chooses to leave
+Thus, if a validator chooses to leave,
 and it is desirable for the total validator count to remain the same,
 a Dutch auction should be performed to fill the empty position
 **before** an ETHDKG ceremony occurs.
@@ -68,8 +67,7 @@ thus, it is not necessary to store the bids of potential validators.
  *  The specifics of the ETHDKG protocol.
 
 ### Assumptions
-Values defined at testing are a guide
-and may be modified in the future.
+Values defined at testing are a guide and may be modified in the future.
 
 ## Specification
 
@@ -77,55 +75,40 @@ and may be modified in the future.
 The solution consists of a Smart Contract that provides the following functionality:
 
 #### Start an auction
-This operation starts an auction by calculating the initial and final prices
-and registering the current block number as the auction's start block;
-upon execution, an event with all auction information will be emitted.
-The execution of this operation will be triggered
-only by the sidechain (onlyFactory)
-whenever a new validator position is opened. 
+This operation starts an auction by receiving the auction parameters, calculating final price
+and registering the current block number as the auction's start block; upon execution, an event with all auction information will be emitted.
+The execution of this operation will be triggered only by Alicenet (onlyFactory) whenever a new validator position is opened. 
 
-This operation supports currently one active auction but it may support multiple openings in the future
+Currently there is only support for starting one active auction at a time.
 #### Get current bidding price
-This operation calculates the current bidding price
-as determined by the price curve and the number of blocks
-since the start of the auction.
-The execution of this operation may be performed at any time
-to check the current bid price.
+This operation calculates the current bidding price as determined by the price curve and the number of blocks since the start of the auction.
+The execution of this operation may be performed at any time to check the current bid price.
 
 #### Bid for current auction price
-This operation emits an event with address of the winner
-and auction details.
-The execution of this operation can be triggered at any time
-by any address that pays the current bid price to become a validator. 
+This operation emits an event with address of the winner and auction details.
+The execution of this operation can be triggered at any time by any address that pays the current bid price to become a validator. 
 
 ### Data
-These variables govern the price curve,
-and most of them are defined before contract deployment;
-only the auction's final price is defined at execution time
-since depends on the gas price of the network
-and the number of current validators at auction start. 
+These variables govern the price curve:
 
-#### Deployment variables
-The following values are set at deployment to produce the results detailed
-in the [Testing](#testing) section;
-these values may be modified upon contract redeployment to adapt the price curve
-to specific requirements.
+#### Auction parameters
+The following values are set at auction starting to produce the results detailed in the [Testing](#testing) section; these values may be modified between auctions to adapt the price curve to specific requirements.
 
-| Descriptor | Description | Default Constructor Value for testing purposes|
+| Descriptor | Description | Default Value for testing purposes|
 | ---------- | ----------- |-------------------------- |
+| Start Price | The start price of the auction in Wei | 1000000.000000000000 |
 | Decay | The decay factor (how fast bidding price decreases with time) | 16 |
-| Scale Parameter | The scale factor (how much the curve is compressed) | 10 |
+| Scale Parameter | The scale factor (how much the price curve is compressed) | 10 |
 
 #### Execution variables
-The following values are calculated at execution time.
+The following values are calculated at execution time:
 
 | Descriptor | Description | Calculated Value |
 | ---------- | ----------- | ---------------- |
 | Final Price  | The final price for auction in Wei (bidding price can never be less than this value) | Cost to add a validator * Current Number of Registered Validators|
 
-The cost to add a validator is calculated as follows:
- *  ETHDKG Single Validator Cost (Two ETHDKG units operations 1.2M gas units)
-    -> 1200000 * 2 operations (In and Out) * gasPriceInWei
+Knowing that ETHDKG ceremony consumes approx 1.2M gas units for operation, total cost to add a single validator is calculated as follows:
+* Single Validator ETHDKG cost = 1200000 * 2 operations (Destroy key and Generate key) * current gasPriceInWei
 
 For dutch auction price curve to be functional start price must always be higher than final price so starting of an auction will revert if this condition is no met.
 
@@ -133,9 +116,7 @@ For dutch auction price curve to be functional start price must always be higher
 ### Logic
 
 #### Start Auction
-This function will be called when a new validator position has opened;
-this may happen when a current validator leaves the network and is replaced
-or when the total number of validators of the network is increased.
+This function will be called when a new validator position has opened; this may happen when a current validator leaves the network and is replaced or when the total number of validators of the network is increased.
 ##### Parameters
 | Descriptor | Description | Default value for testing purposes |
 | ---------- | ----------- |-------------------------- |
@@ -144,16 +125,14 @@ or when the total number of validators of the network is increased.
 The following actions are performed:
 
  *  Define auction start price with parameter value
- *  Calculate auction final price by multiplying ETHDKG Validator Cost
-    by the number of current validators in network
+ *  Calculate auction final price by multiplying ETHDKG Validator Cost by the number of current validators in network
  *  Determine the current auction id by increasing a counter.
  *  Define the auction's start block as the current block number.
- *  emit an AuctionStarted event with auction id,
-    initial price, and final price.
+ *  emit an AuctionStarted event with auction id, initial price, and final price.
  *  Activate the auction
 
 ##### Exceptions
-Reverts if active auction found
+Reverts if current active auction found
 Reverts if calculated final price is higher than specified start price
 
 ##### Access Control 
@@ -183,13 +162,12 @@ This operation is public.
 Revert if no active auction found
 
 #### Bid for Current Price
-This function will be called when a bidder wants to bid the current price
-and earn the validator position.
+This function will be called when a bidder wants to bid the current price and earn the validator position.
 The following actions are performed:
 
  *  Bidder includes appropriate ETH amount within transaction.
  *  Emit an event with address of the winner (sender) and auction details.
- *  Deactivate the auction
+ *  Deactivate the current auction
 
 ##### Access Control 
 This operation is public.
@@ -204,7 +182,7 @@ The following actions are performed:
  * Deactivate Set activateAuction flag to true
 
 ##### Exceptions
-Reverts if no active auction found
+Reverts if no current active auction found
 
 ##### Access Control 
 This operation can only be performed by factory.
@@ -213,9 +191,9 @@ This operation can only be performed by factory.
 ### Testing
 
 The following tests were executed with the following parameters:
+* Start price: 1000000
 * Decay : 16
 * Scale Parameter: 10
-* Start price: 1000000
 
 This is the expected initial bidding price in ETH (block 0):
 1000000.0000000000000000000
