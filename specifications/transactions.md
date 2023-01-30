@@ -295,7 +295,7 @@ The transaction object is central to AliceNet.
 The primary components of a transaction are
 the list of consumed UTXOs (specified as an array of TxIn objects)
 and the list of new UTXOs (specified as an array of TxOut objects).
-It also contains the version number and metadata information
+It also contains the type and data information
 necessary for transaction validation.
 A Fee object is included for completeness and is required
 for validation;
@@ -303,18 +303,18 @@ it is used implicitly in the TxHash computation.
 
 ```
 Tx {
-    Version  (uint32)
-    Metadata (byte array)
-    Fee      (uint256)
-    Vin      (TxIn array)
-    Vout     (TxOut array)
+    Type (uint32)
+    Data (byte array)
+    Fee  (uint256)
+    Vin  (TxIn array)
+    Vout (TxOut array)
 }
 ```
 
  *  Tx
-    - Version:
-      specifies the version of the transaction object
-    - Metadata:
+    - Type:
+      specifies the type of the transaction object
+    - Data:
       specifies additional data required for transaction processing
     - Fee:
       specifies the total transaction fee
@@ -328,8 +328,8 @@ Tx {
 ## Transaction Validation
 
 For a transaction to be valid, it must
- *  have valid version number
- *  have valid metadata corresponding to specified version number
+ *  have valid type
+ *  have valid data corresponding to specified type
  *  have at least one TXIN
  *  have at least one UTXO
  *  have valid transaction indices on all new UTXOs
@@ -409,7 +409,7 @@ the consumed inputs and created outputs.
 Before discussing the precise method of computing transaction hashes,
 we first discuss how to identify TXINs and UTXOs.
 
-Broadly speaking, the transaction version and metadata
+Broadly speaking, the transaction type and data
 information will specify how the remaining information
 (TXINs and UTXOs) will be hashed.
 
@@ -460,29 +460,29 @@ for that subtree;
 ### `TxHash`es
 
 The transaction hash `TxHash` will uniquely identify a transaction.
-It does this using its Version number, Metadata, TXINs,
+It does this using its Type, Data, TXINs,
 and UTXOs.
-The Version and Metadata information is processed first
+The Type and Data information is processed first
 and form one subtree;
-after this, the Version and Metadata are then used
+after this, the Type and Data are then used
 to process the TXINs and UTXOs.
-The Version specifies valid Metadata, TXIN, and UTXO values.
+The Type specifies valid Data, TXIN, and UTXO values.
 
 We use the following algorithm:
 
 ```
-def ComputeTxHash(version, metadata, txins, utxos)
-    v  = LeafHash(00000000||version)
-    md = LeafHash(00000001||metadata)
+def ComputeTxHash(type, data, txins, utxos)
+    v  = LeafHash(00000000||type)
+    md = LeafHash(00000001||data)
     tmp1 = HashPair(v, md)
-    tmp2 = ComputeVinVoutHash(version, metadata, txins, utxos)
+    tmp2 = ComputeVinVoutHash(type, data, txins, utxos)
     txhash = HashPair(tmp1, tmp2)
     return txhash
 
-def ComputeVinVoutHash(version, metadata, txins, utxos)
-    if version == 0:
-        if len(metadata) > 0:
-            return "Error: invalid metadata"
+def ComputeVinVoutHash(type, data, txins, utxos)
+    if type == 0:
+        if len(data) > 0:
+            return "Error: invalid data"
         if len(txins) == 0:
             return "Error: invalid txins"
         if len(utxos) == 0:
@@ -491,13 +491,13 @@ def ComputeVinVoutHash(version, metadata, txins, utxos)
         voutHash = ComputeVoutHash(utxos)
         tmp = HashPair(vinHash, voutHash)
         return tmp
-    if version == 1:
-        if len(metadata) != 8:
-            return "Error: invalid metadata; incorrect length"
-        partialTxInLen = uint32(metadata[:4])
+    if type == 1:
+        if len(data) != 8:
+            return "Error: invalid data; incorrect length"
+        partialTxInLen = uint32(data[:4])
         if partialTxInLen == 0:
-            return "Error: invalid metadata; 0 partial txins"
-        partialUTXOLen = uint32(metadata[4:])
+            return "Error: invalid data; 0 partial txins"
+        partialUTXOLen = uint32(data[4:])
         if len(txins) == 0:
             return "Error: invalid txins"
         if len(utxos) == 0:
@@ -511,7 +511,7 @@ def ComputeVinVoutHash(version, metadata, txins, utxos)
         tmp4 = HashPair(tmp2, tmp3)
         return tmp4
     else:
-        return "Error: invalid version"
+        return "Error: invalid type"
 
 def ComputeVinHash(txins)
     if len(txins) == 0:
@@ -556,26 +556,26 @@ def makeUTXOID(value)
 
 #### Partial Hashing
 
-A Version 1 transaction allows for a partial transaction:
+A Type 1 transaction allows for a partial transaction:
 a portion of TxIn and UTXO elements are specified,
 and the transaction may be completed by another party
 in the future **without any additional communication with the original signer**.
-This is not possible with Version 0 transaction.
+This is not possible with Type 0 transaction.
 
 ```
-def ComputePartialHash(version, metadata, txins, utxos)
-    v  = LeafHash(00000000||version)
-    md = LeafHash(00000001||metadata)
+def ComputePartialHash(type, data, txins, utxos)
+    v  = LeafHash(00000000||type)
+    md = LeafHash(00000001||data)
     tmp1 = HashPair(v, md)
-    tmp2 = ComputeVinVoutHash(version, metadata, txins, utxos)
-    if version == 1:
-        return "Error: invalid version"
-    if len(metadata) != 8:
-        return "Error: invalid metadata; incorrect length"
-    partialTxInLen = uint32(metadata[:4])
+    tmp2 = ComputeVinVoutHash(type, data, txins, utxos)
+    if type == 1:
+        return "Error: invalid type"
+    if len(data) != 8:
+        return "Error: invalid data; incorrect length"
+    partialTxInLen = uint32(data[:4])
     if partialTxInLen == 0:
-        return "Error: invalid metadata; 0 partial txins"
-    partialUTXOLen = uint32(metadata[4:])
+        return "Error: invalid data; 0 partial txins"
+    partialUTXOLen = uint32(data[4:])
     if len(txins) == 0:
         return "Error: invalid txins"
     pVinHash  = ComputeVinHash(txins[:partialTxInLen])
@@ -604,16 +604,16 @@ In any case, the `StateTrie` makes it impossible for there
 to be two different UTXOs with the same `utxoID`,
 as this would lead to an invalid state transition.
 
-## Transaction Versions
+## Transaction Types
 
-We list all valid transaction version information here.
+We list all valid transaction type information here.
 
-### Version 0
- *  Version Number: 0
- *  Metadata: **must** be empty
+### Type 0
+ *  Type: 0
+ *  Data: **must** be empty
 
-### Version 1
- *  Version Number: 1
- *  Metadata: **must** be a byte slice of 8 bytes representing 2 `uint32`
+### Type 1
+ *  Type: 1
+ *  Data: **must** be a byte slice of 8 bytes representing 2 `uint32`
     values in big-endian form;
     first `uint32` value **must** be nonzero.
